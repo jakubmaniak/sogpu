@@ -1,0 +1,31 @@
+{
+    "name": "sogpu",
+    "version": "0.1.0",
+    "description": "",
+    "keywords": [
+        "webgpu"
+    ],
+    "license": "MIT",
+    "author": "Jakub Maniak",
+    "type": "module",
+    "main": "./index.js",
+    "module": "./index.js",
+    "types": "./types/index.d.ts",
+    "exports": {
+      ".": {
+        "import": "./index.js",
+        "require": "./index.js",
+        "types": "./types/index.d.ts"
+      }
+    },
+    "scripts": {
+        "build:lib": "bun build src/index.ts --outdir . --target=bun --packages external",
+        "build:types": "bunx tsc --project tsconfig.types.json"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.3.14"
+    },
+    "dependencies": {
+        "bun-webgpu": "^0.1.7"
+    }
+}

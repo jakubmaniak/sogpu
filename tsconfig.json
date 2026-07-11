@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "lib": ["ESNext"],
+        "target": "esnext",
+        "module": "nodenext",
+        "types": ["bun", "@webgpu/types", "bun-webgpu"],
+
+        "moduleResolution": "nodenext",
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+
+        "strict": true,
+        "skipLibCheck": true
+    }
+}
