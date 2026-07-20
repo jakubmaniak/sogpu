@@ -59,13 +59,22 @@ export function addGPUErrorHandler(adapter: GPUAdapter) {
         let message = '[empty message]';
         try {
             if (msgArg) {
-                const svBuf = toArrayBuffer(msgArg, 0, 16);
-                const dv = new DataView(svBuf);
-                const dataPtr = dv.getBigUint64(0, true);
-                const len = Number(dv.getBigUint64(8, true));
-                if (dataPtr !== 0n && len > 0 && len < 10000) {
-                    const strBuf = toArrayBuffer(Number(dataPtr) as any, 0, len);
-                    message = new TextDecoder().decode(strBuf);
+                if (process.platform == 'win32') {
+                    const svBuf = toArrayBuffer(msgArg, 0, 16);
+                    const dv = new DataView(svBuf);
+                    const dataPtr = dv.getBigUint64(0, true);
+                    const len = Number(dv.getBigUint64(8, true));
+                    if (dataPtr !== 0n && len > 0 && len < 10000) {
+                        const strBuf = toArrayBuffer(Number(dataPtr) as any, 0, len);
+                        message = new TextDecoder().decode(strBuf);
+                    }
+                }
+                else {
+                    const strBuf = toArrayBuffer(msgArg, 0, 1024);
+                    const bytes = new Uint8Array(strBuf);
+                    const nulPos = bytes.indexOf(0);
+                    const end = nulPos == -1 ? bytes.length : nulPos;
+                    message = new TextDecoder().decode(bytes.subarray(0, end));
                 }
             }
         }

@@ -14,7 +14,7 @@ type WindowHandles = {
 };
 
 
-export function createSurface(lib: any, instance: Pointer, handles: WindowHandles): Pointer | null {
+function createSurface(lib: any, instance: Pointer, handles: WindowHandles): Pointer | null {
     const chain = getSurfaceChain(handles);
 
     const descriptor = new Uint8Array(24);
@@ -36,7 +36,7 @@ function getSurfaceChain(handles: WindowHandles) {
         case 'x11':
             return x11Chain(display!, window as bigint);
         case 'cocoa':
-            throw new Error('Surface creation is not implemented for macOS.');
+            return cocoaChain(window as Pointer);
     }
 }
 
@@ -83,7 +83,19 @@ function waylandChain(display: Pointer, waylandSurface: Pointer) {
     return chain as Buffer;
 }
 
-function cocoaChain(layer: Pointer) {
+function cocoaChain(window: Pointer) {
+    const { symbols: lib } = dlopen('lib/libmetallayer.dylib', {
+        createMetalLayer: {
+            returns: 'pointer',
+            args: ['pointer']
+        },
+    });
+
+    const layer = lib.createMetalLayer(window);
+    if (!layer) {
+        throw new Error('CAMetalLayer creating error');
+    }
+
     const chain = new Uint8Array(24);
     const view = new DataView(chain.buffer);
     view.setUint32(8, WGPUSType_SurfaceSourceMetalLayer, true);
@@ -102,7 +114,7 @@ export type SurfaceConfiguration = {
     vsync?: boolean;
 };
 
-export function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration) {
+function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration) {
     const devicePtr = config.device.ptr;
 
     const format = {
@@ -139,19 +151,19 @@ export function configureSurface(lib: any, surface: Pointer, config: SurfaceConf
 }
 
 
-export function getCurrentTexture(lib: any, surface: Pointer): bigint {
-    // const buffer = Buffer.allocUnsafe(24);
+function getCurrentTexture(lib: any, surface: Pointer): bigint {
     const buffer = Buffer.alloc(24);
     lib.wgpuSurfaceGetCurrentTexture(surface, ptr(buffer));
+
     const view = new DataView(buffer.buffer);
     return view.getBigUint64(8, true);
 }
 
-export function getCurrentTextureView(lib: any, texture: bigint): Pointer {
+function getCurrentTextureView(lib: any, texture: bigint): Pointer {
     return lib.wgpuTextureCreateView(Number(texture), null);
 }
 
-export function present(lib: any, surface: Pointer) {
+function present(lib: any, surface: Pointer) {
     return lib.wgpuSurfacePresent(surface);
 }
 
@@ -255,9 +267,12 @@ export class SurfaceContext {
     }
 
     present() {
+        present(this._lib, this.surface!);
+
         this.currentTextureView && this._lib.wgpuTextureViewRelease(this.currentTextureView);
         this.currentTexture && this._lib.wgpuTextureRelease(Number(this.currentTexture));
 
-        present(this._lib, this.surface!);
+        this.currentTextureView = null;
+        this.currentTexture = null;
     }
 }

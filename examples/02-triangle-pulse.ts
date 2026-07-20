@@ -3,7 +3,7 @@ import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsa
 
 const adapterRequest = gpu.requestAdapter({
     powerPreference: 'high-performance',
-    backendType: 'Vulkan'
+    backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
 } satisfies (GPURequestAdapterOptions & { backendType: string }) as any);
 
 
@@ -94,8 +94,8 @@ const passDesc = {
     colorAttachments: [{
         view: null as unknown as GPUTextureView,
         loadOp: 'clear',
-        storeOp: 'discard',
-        clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.5 }
+        storeOp: 'store',
+        clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }
     }] as GPURenderPassColorAttachment[]
 } satisfies GPURenderPassDescriptor;
 

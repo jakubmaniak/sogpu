@@ -66,7 +66,10 @@ export class GLFWAdapter {
                     window: (glfw as any).glfwGetX11Window(window)
                 };
             case 'cocoa':
-                throw new Error('Surface creation is not implemented for macOS.');
+                return {
+                    display: null,
+                    window: (glfw as any).glfwGetCocoaWindow(window)
+                };
         }
     }
 

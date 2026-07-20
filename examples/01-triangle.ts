@@ -3,7 +3,7 @@ import { gpu, WindowInstance } from '../src/index.js';
 
 const adapterRequest = gpu.requestAdapter({
     powerPreference: 'high-performance',
-    backendType: 'Vulkan'
+    backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
 } satisfies (GPURequestAdapterOptions & { backendType: string }) as any);
 
 
@@ -37,7 +37,7 @@ function init() {
 
             @fragment
             fn fs_main() -> @location(0) vec4<f32> {
-                return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+                return vec4<f32>(1.0, 1.0, 0.0, 1.0);
             }
         `
     });
@@ -59,7 +59,7 @@ const passDesc = {
     colorAttachments: [{
         view: null as unknown as GPUTextureView,
         loadOp: 'clear',
-        storeOp: 'discard',
+        storeOp: 'store',
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.5 }
     }] as GPURenderPassColorAttachment[]
 } satisfies GPURenderPassDescriptor;

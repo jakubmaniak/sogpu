@@ -67,7 +67,7 @@ const platformDependent = {
     },
     cocoa: {
         glfwGetCocoaWindow: {
-            returns: FFIType.u32,
+            returns: FFIType.pointer,
             args: [FFIType.pointer]
         }
     }
@@ -76,6 +76,8 @@ const platformDependent = {
 const libPath = (
     platform == 'win32'
     ? './lib/glfw3.dll'
+    : platform == 'cocoa'
+    ? './lib/libglfw.dylib'
     : `./lib/glfw3.${process.arch}.${suffix}`
 );
 const libFilePath = (
