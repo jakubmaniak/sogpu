@@ -1,5 +1,7 @@
+import { fileURLToPath } from 'bun';
 import { dlopen, ptr, type Pointer } from 'bun:ffi';
-import type { GLFWAdapter } from './glfw/adapter.js';
+import path from 'node:path';
+import { type GLFWAdapter } from './glfw/adapter.js';
 import { getPlatformType } from './platform.js';
 
 
@@ -84,7 +86,12 @@ function waylandChain(display: Pointer, waylandSurface: Pointer) {
 }
 
 function cocoaChain(window: Pointer) {
-    const { symbols: lib } = dlopen('lib/libmetallayer.dylib', {
+    const libPath = './lib/libmetallayer.dylib';
+    const resolvedPath = import.meta.file == 'surface.ts'
+        ? path.resolve(libPath)
+        : fileURLToPath(import.meta.resolve(libPath));
+
+    const { symbols: lib } = dlopen(resolvedPath, {
         createMetalLayer: {
             returns: 'pointer',
             args: ['pointer']
@@ -161,10 +168,6 @@ function getCurrentTexture(lib: any, surface: Pointer): bigint {
 
 function getCurrentTextureView(lib: any, texture: bigint): Pointer {
     return lib.wgpuTextureCreateView(Number(texture), null);
-}
-
-function present(lib: any, surface: Pointer) {
-    return lib.wgpuSurfacePresent(surface);
 }
 
 
@@ -244,6 +247,10 @@ export class SurfaceContext {
     // }
 
     getCurrentTextureView() {
+        if (!this.surface) {
+            throw new Error('Surface context is not configured');
+        }
+
         const texture = getCurrentTexture(this._lib, this.surface!);
         const pointer = getCurrentTextureView(this._lib, texture);
 
@@ -255,19 +262,10 @@ export class SurfaceContext {
             ptr: pointer,
             destroy() { }
         } as GPUTextureView;
-
-        // const lib = this._lib;
-        // return {
-        //     ptr: pointer,
-        //     [Symbol.dispose]() {
-        //         lib.wgpuTextureViewRelease(pointer);
-        //         lib.wgpuTextureRelease(Number(texture));
-        //     }
-        // } as GPUTextureView & Disposable;
     }
 
     present() {
-        present(this._lib, this.surface!);
+        this._lib.wgpuSurfacePresent(this.surface);
 
         this.currentTextureView && this._lib.wgpuTextureViewRelease(this.currentTextureView);
         this.currentTexture && this._lib.wgpuTextureRelease(Number(this.currentTexture));

@@ -54,8 +54,7 @@ export function createMappedBuffer<T extends GPUBufferSource>(device: GPUDevice,
 
 
 export function addGPUErrorHandler(adapter: GPUAdapter) {
-    const adapterImpl = (adapter as any);
-    adapterImpl.handleUncapturedError = (devicePtr: any, typeInt: any, msgArg: any, sizeOrUserdata1: any, ud1: any, ud2: any) => {
+    (adapter as any).handleUncapturedError = (devicePtr: any, typeInt: any, msgArg: any, sizeOrUserdata1: any, ud1: any, ud2: any) => {
         let message = '[empty message]';
         try {
             if (msgArg) {

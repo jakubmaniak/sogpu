@@ -36,18 +36,25 @@ function createMappedBuffer(device, data, usage) {
   return buffer;
 }
 function addGPUErrorHandler(adapter) {
-  const adapterImpl = adapter;
-  adapterImpl.handleUncapturedError = (devicePtr, typeInt, msgArg, sizeOrUserdata1, ud1, ud2) => {
+  adapter.handleUncapturedError = (devicePtr, typeInt, msgArg, sizeOrUserdata1, ud1, ud2) => {
     let message = "[empty message]";
     try {
       if (msgArg) {
-        const svBuf = toArrayBuffer(msgArg, 0, 16);
-        const dv = new DataView(svBuf);
-        const dataPtr = dv.getBigUint64(0, true);
-        const len = Number(dv.getBigUint64(8, true));
-        if (dataPtr !== 0n && len > 0 && len < 1e4) {
-          const strBuf = toArrayBuffer(Number(dataPtr), 0, len);
-          message = new TextDecoder().decode(strBuf);
+        if (process.platform == "win32") {
+          const svBuf = toArrayBuffer(msgArg, 0, 16);
+          const dv = new DataView(svBuf);
+          const dataPtr = dv.getBigUint64(0, true);
+          const len = Number(dv.getBigUint64(8, true));
+          if (dataPtr !== 0n && len > 0 && len < 1e4) {
+            const strBuf = toArrayBuffer(Number(dataPtr), 0, len);
+            message = new TextDecoder().decode(strBuf);
+          }
+        } else {
+          const strBuf = toArrayBuffer(msgArg, 0, 1024);
+          const bytes = new Uint8Array(strBuf);
+          const nulPos = bytes.indexOf(0);
+          const end = nulPos == -1 ? bytes.length : nulPos;
+          message = new TextDecoder().decode(bytes.subarray(0, end));
         }
       }
     } catch {}
@@ -138,12 +145,12 @@ var platformDependent = {
   },
   cocoa: {
     glfwGetCocoaWindow: {
-      returns: FFIType.u32,
+      returns: FFIType.pointer,
       args: [FFIType.pointer]
     }
   }
 };
-var libPath = platform == "win32" ? "./lib/glfw3.dll" : `./lib/glfw3.${process.arch}.${suffix}`;
+var libPath = platform == "win32" ? "./lib/glfw3.dll" : platform == "cocoa" ? "./lib/libglfw.dylib" : `./lib/glfw3.${process.arch}.${suffix}`;
 var libFilePath = import.meta.file == "ffi.ts" ? path.resolve(libPath) : fileURLToPath(import.meta.resolve(libPath));
 var { symbols: glfw } = dlopen(libFilePath, {
   glfwInit: {
@@ -251,7 +258,10 @@ class GLFWAdapter {
           window: ffi_default.glfwGetX11Window(window)
         };
       case "cocoa":
-        throw new Error("Surface creation is not implemented for macOS.");
+        return {
+          display: null,
+          window: ffi_default.glfwGetCocoaWindow(window)
+        };
     }
   }
   pollEvents() {
@@ -273,7 +283,10 @@ class GLFWAdapter {
 }
 
 // src/surface.ts
+var {fileURLToPath: fileURLToPath2 } = globalThis.Bun;
 import { dlopen as dlopen2, ptr as ptr2 } from "bun:ffi";
+import path2 from "path";
+var WGPUSType_SurfaceSourceMetalLayer = 4;
 var WGPUSType_SurfaceSourceWindowsHWND = 5;
 var WGPUSType_SurfaceSourceXlibWindow = 6;
 var WGPUSType_SurfaceSourceWaylandSurface = 7;
@@ -294,7 +307,7 @@ function getSurfaceChain(handles) {
     case "x11":
       return x11Chain(display, window);
     case "cocoa":
-      throw new Error("Surface creation is not implemented for macOS.");
+      return cocoaChain(window);
   }
 }
 function win32Chain(window) {
@@ -331,6 +344,25 @@ function waylandChain(display, waylandSurface) {
   view.setBigUint64(24, BigInt(waylandSurface), true);
   return chain;
 }
+function cocoaChain(window) {
+  const libPath2 = "./lib/libmetallayer.dylib";
+  const resolvedPath = import.meta.file == "surface.ts" ? path2.resolve(libPath2) : fileURLToPath2(import.meta.resolve(libPath2));
+  const { symbols: lib } = dlopen2(resolvedPath, {
+    createMetalLayer: {
+      returns: "pointer",
+      args: ["pointer"]
+    }
+  });
+  const layer = lib.createMetalLayer(window);
+  if (!layer) {
+    throw new Error("CAMetalLayer creating error");
+  }
+  const chain = new Uint8Array(24);
+  const view = new DataView(chain.buffer);
+  view.setUint32(8, WGPUSType_SurfaceSourceMetalLayer, true);
+  view.setBigUint64(16, BigInt(layer), true);
+  return chain;
+}
 function configureSurface(lib, surface, config) {
   const devicePtr = config.device.ptr;
   const format = {
@@ -363,9 +395,6 @@ function getCurrentTexture(lib, surface) {
 }
 function getCurrentTextureView(lib, texture) {
   return lib.wgpuTextureCreateView(Number(texture), null);
-}
-function present(lib, surface) {
-  return lib.wgpuSurfacePresent(surface);
 }
 
 class SurfaceContext {
@@ -415,6 +444,9 @@ class SurfaceContext {
     queue.submit = submit.bind(queue);
   }
   getCurrentTextureView() {
+    if (!this.surface) {
+      throw new Error("Surface context is not configured");
+    }
     const texture = getCurrentTexture(this._lib, this.surface);
     const pointer = getCurrentTextureView(this._lib, texture);
     this.currentTexture = texture;
@@ -426,9 +458,11 @@ class SurfaceContext {
     };
   }
   present() {
+    this._lib.wgpuSurfacePresent(this.surface);
     this.currentTextureView && this._lib.wgpuTextureViewRelease(this.currentTextureView);
     this.currentTexture && this._lib.wgpuTextureRelease(Number(this.currentTexture));
-    present(this._lib, this.surface);
+    this.currentTextureView = null;
+    this.currentTexture = null;
   }
 }
 
