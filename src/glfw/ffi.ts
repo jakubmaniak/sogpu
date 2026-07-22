@@ -1,7 +1,5 @@
-import { fileURLToPath } from 'bun';
 import { dlopen, FFIType, suffix } from 'bun:ffi';
-import path from 'node:path';
-import { getPlatformType } from '../platform.js';
+import { getPlatformType, resolveLibPath } from '../platform.js';
 
 
 const constants = {
@@ -83,11 +81,7 @@ const libPath = (
     ? './lib/libglfw.dylib'
     : `./lib/glfw3.${process.arch}.${suffix}`
 );
-const libFilePath = (
-    import.meta.file == 'ffi.ts'
-    ? path.resolve(libPath)
-    : fileURLToPath(import.meta.resolve(libPath))
-);
+const libFilePath = resolveLibPath(libPath);
 
 
 const { symbols: glfw } = dlopen(libFilePath, {

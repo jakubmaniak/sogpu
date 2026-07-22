@@ -82,6 +82,8 @@ function addGPUErrorHandler(adapter) {
 import { ptr } from "bun:ffi";
 
 // src/platform.ts
+var {fileURLToPath } = globalThis.Bun;
+import path from "path";
 function getPlatformType() {
   switch (process.platform) {
     case "win32":
@@ -97,11 +99,18 @@ function getPlatformType() {
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
 }
+function resolveLibPath(libPath) {
+  if (import.meta.file == "platform.ts") {
+    return path.resolve(libPath);
+  } else if (import.meta.dir.startsWith("/$bunfs/") || import.meta.dir.startsWith("B:\\~BUN\\")) {
+    return path.join(path.dirname(process.execPath), libPath);
+  } else {
+    return fileURLToPath(import.meta.resolve(libPath));
+  }
+}
 
 // src/glfw/ffi.ts
-var {fileURLToPath } = globalThis.Bun;
 import { dlopen, FFIType, suffix } from "bun:ffi";
-import path from "path";
 var constants = {
   FALSE: 0,
   TRUE: 1,
@@ -170,7 +179,7 @@ var platformDependent = {
   }
 };
 var libPath = platform == "win32" ? "./lib/glfw3.dll" : platform == "cocoa" ? "./lib/libglfw.dylib" : `./lib/glfw3.${process.arch}.${suffix}`;
-var libFilePath = import.meta.file == "ffi.ts" ? path.resolve(libPath) : fileURLToPath(import.meta.resolve(libPath));
+var libFilePath = resolveLibPath(libPath);
 var { symbols: glfw } = dlopen(libFilePath, {
   glfwInit: {
     returns: FFIType.i32,
@@ -373,9 +382,7 @@ class GLFWAdapter {
 }
 
 // src/surface.ts
-var {fileURLToPath: fileURLToPath2 } = globalThis.Bun;
 import { dlopen as dlopen2, ptr as ptr2 } from "bun:ffi";
-import path2 from "path";
 var WGPUSType_SurfaceSourceMetalLayer = 4;
 var WGPUSType_SurfaceSourceWindowsHWND = 5;
 var WGPUSType_SurfaceSourceXlibWindow = 6;
@@ -436,7 +443,7 @@ function waylandChain(display, waylandSurface) {
 }
 function cocoaChain(window) {
   const libPath2 = "./lib/libmetallayer.dylib";
-  const resolvedPath = import.meta.file == "surface.ts" ? path2.resolve(libPath2) : fileURLToPath2(import.meta.resolve(libPath2));
+  const resolvedPath = resolveLibPath(libPath2);
   const { symbols: lib } = dlopen2(resolvedPath, {
     createMetalLayer: {
       returns: "pointer",

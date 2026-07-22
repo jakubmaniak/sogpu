@@ -1,9 +1,7 @@
-import { fileURLToPath } from 'bun';
 import { dlopen, ptr, type Pointer } from 'bun:ffi';
-import path from 'node:path';
 import { type GLFWAdapter } from './glfw/adapter.js';
-import { getPlatformType } from './platform.js';
 import { gpu } from './gpu.js';
+import { getPlatformType, resolveLibPath } from './platform.js';
 
 
 const WGPUSType_SurfaceSourceMetalLayer     = 0x00000004;
@@ -88,9 +86,7 @@ function waylandChain(display: Pointer, waylandSurface: Pointer) {
 
 function cocoaChain(window: Pointer) {
     const libPath = './lib/libmetallayer.dylib';
-    const resolvedPath = import.meta.file == 'surface.ts'
-        ? path.resolve(libPath)
-        : fileURLToPath(import.meta.resolve(libPath));
+    const resolvedPath = resolveLibPath(libPath);
 
     const { symbols: lib } = dlopen(resolvedPath, {
         createMetalLayer: {
