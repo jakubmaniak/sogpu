@@ -29,26 +29,6 @@ function init() {
     const uniformData = new Float32Array([0, 0, 0, 1, 1, 1]);
     const uniformBuffer = device.createMappedBuffer(uniformData, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
 
-    const ubl = device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: { type: 'uniform' }
-            },
-        ]
-    });
-
-    const ubg = device.createBindGroup({
-        layout: ubl,
-        entries: [
-            {
-                binding: 0,
-                resource: { buffer: uniformBuffer }
-            }
-        ]
-    });
-
     const shader = device.createShaderModule({
         code: /*wgsl*/`
             struct Uniforms {
@@ -87,7 +67,7 @@ function init() {
     });
 
     const pipeline = device.createRenderPipeline({
-        layout: device.createPipelineLayout({ bindGroupLayouts: [ubl] }),
+        layout: 'auto',
         vertex: { module: shader },
         fragment: {
             module: shader,
@@ -95,7 +75,17 @@ function init() {
         },
     });
 
-    return { pipeline, uniformBuffer, ubg };
+    const uniformBind = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+            {
+                binding: 0,
+                resource: { buffer: uniformBuffer }
+            }
+        ]
+    });
+
+    return { pipeline, uniformBuffer, uniformBind };
 }
 
 
@@ -107,7 +97,6 @@ const passDesc = {
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }
     }] as GPURenderPassColorAttachment[]
 } satisfies GPURenderPassDescriptor;
-let lastWindowSize = win.getSize();
 
 
 function render() {
@@ -119,7 +108,7 @@ function render() {
 
     const pass = encoder.beginRenderPass(passDesc);
     pass.setPipeline(pipeline);
-    pass.setBindGroup(0, ubg);
+    pass.setBindGroup(0, uniformBind);
     pass.draw(6);
     pass.end();
 
@@ -143,7 +132,7 @@ function updateUniforms() {
 
 
 win.pollEvents();
-const { pipeline, uniformBuffer, ubg } = init();
+const { pipeline, uniformBuffer, uniformBind } = init();
 
 while (!win.shouldClose()) {
     win.pollEvents();
