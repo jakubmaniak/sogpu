@@ -455,14 +455,17 @@ function cocoaChain(window) {
 }
 function configureSurface(lib, surface, config) {
   const devicePtr = config.device.ptr;
-  const format = {
+  const formatDict = {
     rgba8unorm: 18,
     bgra8unorm: 23,
-    rgba16float: 34
-  }[config.format ?? "bgra8unorm"];
-  if (!format) {
-    throw new Error("Invalid surface format");
+    rgba16float: 34,
+    rgba32float: 35
+  };
+  const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
+  if (!(formatKey in formatDict)) {
+    throw new Error("Invalid or unknown surface format");
   }
+  const format = formatDict[formatKey];
   const usage = config.usage ?? 16;
   const alphaMode = 1;
   const presentMode = config.vsync ?? true ? 1 : 3;

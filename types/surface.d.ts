@@ -4,7 +4,7 @@ export type SurfaceConfiguration = {
     device: GPUDevice;
     width: number;
     height: number;
-    format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float';
+    format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float' | GPUTextureFormat;
     usage?: number;
     alphaMode?: string;
     vsync?: boolean;

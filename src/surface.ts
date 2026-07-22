@@ -3,6 +3,7 @@ import { dlopen, ptr, type Pointer } from 'bun:ffi';
 import path from 'node:path';
 import { type GLFWAdapter } from './glfw/adapter.js';
 import { getPlatformType } from './platform.js';
+import { gpu } from './gpu.js';
 
 
 const WGPUSType_SurfaceSourceMetalLayer     = 0x00000004;
@@ -115,7 +116,7 @@ export type SurfaceConfiguration = {
     device: GPUDevice;
     width: number;
     height: number;
-    format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float';
+    format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float' | GPUTextureFormat;
     usage?: number;
     alphaMode?: string;
     vsync?: boolean;
@@ -124,17 +125,20 @@ export type SurfaceConfiguration = {
 function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration) {
     const devicePtr = config.device.ptr;
 
-    const format = {
+    const formatDict = {
         rgba8unorm: 18,
         bgra8unorm: 23,
         rgba16float: 34,
-        //rgba32float: 35,
-    }[config.format ?? 'bgra8unorm'];
+        rgba32float: 35
+    };
 
-    if (!format) {
-        throw new Error('Invalid surface format');
+    const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
+    if (!(formatKey in formatDict)) {
+        throw new Error('Invalid or unknown surface format');
     }
 
+    const format = formatDict[formatKey as keyof typeof formatDict];
+    
     // 16 - RenderAttachment, 1 - CopySrc, 2 - CopyDst, 4 - TextureBinding, 8 - StorageBinding
     const usage = config.usage ?? 16;
     // 0 - Auto, 1 - Opaque, 2 - PreMultiplied, 3 - PostMultiplied, 4 - Inherit

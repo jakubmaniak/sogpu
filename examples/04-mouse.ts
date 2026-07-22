@@ -21,7 +21,8 @@ const device = extendDevice(await adapter.requestDevice(), {
 addGPUErrorHandler(adapter);
 
 const ctx = win.getContext();
-ctx.configure({ device, width: 1280, height: 720 });
+const preferredFormat = gpu.getPreferredCanvasFormat();
+ctx.configure({ device, width: 1280, height: 720, format: preferredFormat });
 
 
 function init() {
@@ -90,7 +91,7 @@ function init() {
         vertex: { module: shader },
         fragment: {
             module: shader,
-            targets: [{ format: 'bgra8unorm' }]
+            targets: [{ format: preferredFormat }]
         },
     });
 
