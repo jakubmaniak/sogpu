@@ -1,14 +1,10 @@
 import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, GPUShaderStage, WindowInstance, type GPUBufferSource } from '../src/index.js';
 
 
-const adapterRequest = gpu.requestAdapter({
-    powerPreference: 'high-performance',
-    backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
-} satisfies (GPURequestAdapterOptions & { backendType: string }) as any);
+const adapterRequest = gpu.requestAdapter({ powerPreference: 'high-performance' });
 
-
+// let the user see the window immediately, while the adapter is being requested in the background
 const win = new WindowInstance(1280, 720, 'My GLFW Window');
-
 
 const adapter = await adapterRequest;
 if (!adapter) {

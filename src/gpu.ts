@@ -1,9 +1,6 @@
 import { createGPUInstance } from 'bun-webgpu';
 import { toArrayBuffer } from 'bun:ffi';
 
-type GPU = ReturnType<typeof createGPUInstance>;
-export const gpu: GPU = createGPUInstance();
-
 
 export enum GPUBufferUsage {
     MAP_READ = 1,
@@ -18,6 +15,15 @@ export enum GPUBufferUsage {
     QUERY_RESOLVE = 512
 }
 
+export enum GPUTextureUsage {
+    COPY_SRC = 1,
+    COPY_DST = 2,
+    TEXTURE_BINDING = 4,
+    STORAGE_BINDING = 8,
+    RENDER_ATTACHMENT = 16,
+    TRANSIENT_ATTACHMENT = 32
+}
+
 export enum GPUShaderStage {
     VERTEX = 1,
     FRAGMENT = 2,
@@ -28,6 +34,18 @@ export enum GPUShaderStage {
 export type GPUBufferSource = Float32Array<ArrayBufferLike>
     | Uint32Array<ArrayBufferLike>
     | Uint16Array<ArrayBufferLike>;
+
+
+type GPU = ReturnType<typeof createGPUInstance>;
+export const gpu: GPU = createGPUInstance();
+const requestAdapterFn = gpu.requestAdapter;
+
+gpu.requestAdapter = function(options?: GPURequestAdapterOptions) {
+    return requestAdapterFn.call(gpu, {
+        ...options,
+        backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
+    } satisfies GPURequestAdapterOptions & { backendType: string } as any);
+};
 
 
 export function extendDevice<T>(device: GPUDevice, props: T) {

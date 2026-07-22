@@ -2,7 +2,6 @@
 // src/gpu.ts
 import { createGPUInstance } from "bun-webgpu";
 import { toArrayBuffer } from "bun:ffi";
-var gpu = createGPUInstance();
 var GPUBufferUsage;
 ((GPUBufferUsage2) => {
   GPUBufferUsage2[GPUBufferUsage2["MAP_READ"] = 1] = "MAP_READ";
@@ -16,12 +15,29 @@ var GPUBufferUsage;
   GPUBufferUsage2[GPUBufferUsage2["INDIRECT"] = 256] = "INDIRECT";
   GPUBufferUsage2[GPUBufferUsage2["QUERY_RESOLVE"] = 512] = "QUERY_RESOLVE";
 })(GPUBufferUsage ||= {});
+var GPUTextureUsage;
+((GPUTextureUsage2) => {
+  GPUTextureUsage2[GPUTextureUsage2["COPY_SRC"] = 1] = "COPY_SRC";
+  GPUTextureUsage2[GPUTextureUsage2["COPY_DST"] = 2] = "COPY_DST";
+  GPUTextureUsage2[GPUTextureUsage2["TEXTURE_BINDING"] = 4] = "TEXTURE_BINDING";
+  GPUTextureUsage2[GPUTextureUsage2["STORAGE_BINDING"] = 8] = "STORAGE_BINDING";
+  GPUTextureUsage2[GPUTextureUsage2["RENDER_ATTACHMENT"] = 16] = "RENDER_ATTACHMENT";
+  GPUTextureUsage2[GPUTextureUsage2["TRANSIENT_ATTACHMENT"] = 32] = "TRANSIENT_ATTACHMENT";
+})(GPUTextureUsage ||= {});
 var GPUShaderStage;
 ((GPUShaderStage2) => {
   GPUShaderStage2[GPUShaderStage2["VERTEX"] = 1] = "VERTEX";
   GPUShaderStage2[GPUShaderStage2["FRAGMENT"] = 2] = "FRAGMENT";
   GPUShaderStage2[GPUShaderStage2["COMPUTE"] = 4] = "COMPUTE";
 })(GPUShaderStage ||= {});
+var gpu = createGPUInstance();
+var requestAdapterFn = gpu.requestAdapter;
+gpu.requestAdapter = function(options) {
+  return requestAdapterFn.call(gpu, {
+    ...options,
+    backendType: process.platform == "darwin" ? "Metal" : "Vulkan"
+  });
+};
 function extendDevice(device, props) {
   return Object.assign(device, props);
 }
@@ -496,6 +512,7 @@ export {
   createMappedBuffer,
   addGPUErrorHandler,
   WindowInstance,
+  GPUTextureUsage,
   GPUShaderStage,
   GPUBufferUsage
 };

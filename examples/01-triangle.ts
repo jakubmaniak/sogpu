@@ -1,25 +1,16 @@
 import { gpu, WindowInstance } from '../src/index.js';
 
 
-const adapterRequest = gpu.requestAdapter({
-    powerPreference: 'high-performance',
-    backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
-} satisfies (GPURequestAdapterOptions & { backendType: string }) as any);
-
-
-const win = new WindowInstance(1280, 720, 'My GLFW Window');
-
-
-const adapter = await adapterRequest;
+const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' });
 if (!adapter) {
     throw new Error('Failed to request GPU adapter.');
 }
 
-const device = await adapter.requestDevice();
+const win = new WindowInstance(1280, 720, 'My GLFW Window');
 
+const device = await adapter.requestDevice();
 const ctx = win.getContext();
 ctx.configure({ device, width: 1280, height: 720 });
-
 
 
 function init() {
