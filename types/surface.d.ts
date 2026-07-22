@@ -6,8 +6,12 @@ export type SurfaceConfiguration = {
     height: number;
     format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float' | GPUTextureFormat;
     usage?: number;
-    alphaMode?: string;
+    alphaMode?: 'opaque' | 'premultiplied';
     vsync?: boolean;
+    toneMapping?: {
+        mode: 'standard' | 'extended';
+    };
+    colorSpace?: 'srgb' | 'display-p3';
 };
 export declare class SurfaceContext {
     private glfw;

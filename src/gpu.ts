@@ -52,6 +52,7 @@ export function extendDevice<T>(device: GPUDevice, props: T) {
     return Object.assign(device, props);
 }
 
+
 export function createMappedBuffer<T extends GPUBufferSource>(device: GPUDevice, data: T, usage: number) {
     const buffer = device.createBuffer({
         size: (data.byteLength + 3) & ~3, // align to 4 bytes

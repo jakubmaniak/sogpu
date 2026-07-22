@@ -4,7 +4,7 @@
 
 
 extern "C"
-void *createMetalLayer(void *windowPtr)
+void *createMetalLayer(void *windowPtr, bool framebufferOnly, bool hdr, bool p3)
 {
     @autoreleasepool {
         NSWindow *window = (__bridge NSWindow *)windowPtr;
@@ -13,13 +13,24 @@ void *createMetalLayer(void *windowPtr)
         CAMetalLayer *layer = [CAMetalLayer layer];
         // layer.device = MTLCreateSystemDefaultDevice();
         layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        layer.framebufferOnly = YES;
+        layer.colorspace = CGColorSpaceCreateWithName(
+            p3 ? kCGColorSpaceDisplayP3 : kCGColorSpaceSRGB
+        );
+        layer.framebufferOnly = framebufferOnly;
         layer.contentsScale = window.backingScaleFactor;
         layer.frame = view.bounds;
         layer.drawableSize = CGSizeMake(
             view.bounds.size.width * layer.contentsScale,
             view.bounds.size.height * layer.contentsScale
         );
+
+        if (hdr) {
+            layer.wantsExtendedDynamicRangeContent = YES;
+            layer.pixelFormat = MTLPixelFormatRGBA16Float;
+            layer.colorspace = CGColorSpaceCreateWithName(
+                p3 ? kCGColorSpaceExtendedDisplayP3 : kCGColorSpaceExtendedSRGB
+            );
+        }
 
         view.wantsLayer = YES;
         view.layer = layer;

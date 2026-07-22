@@ -15,8 +15,8 @@ type WindowHandles = {
 };
 
 
-function createSurface(lib: any, instance: Pointer, handles: WindowHandles): Pointer | null {
-    const chain = getSurfaceChain(handles);
+function createSurface(lib: any, instance: Pointer, handles: WindowHandles, config: SurfaceConfiguration): Pointer | null {
+    const chain = getSurfaceChain(handles, config);
 
     const descriptor = new Uint8Array(24);
     const view = new DataView(descriptor.buffer);
@@ -26,7 +26,7 @@ function createSurface(lib: any, instance: Pointer, handles: WindowHandles): Poi
 }
 
 
-function getSurfaceChain(handles: WindowHandles) {
+function getSurfaceChain(handles: WindowHandles, config: SurfaceConfiguration) {
     const { display, window } = handles;
 
     switch (getPlatformType()) {
@@ -37,7 +37,7 @@ function getSurfaceChain(handles: WindowHandles) {
         case 'x11':
             return x11Chain(display!, window as bigint);
         case 'cocoa':
-            return cocoaChain(window as Pointer);
+            return cocoaChain(window as Pointer, config);
     }
 }
 
@@ -84,18 +84,20 @@ function waylandChain(display: Pointer, waylandSurface: Pointer) {
     return chain as Buffer;
 }
 
-function cocoaChain(window: Pointer) {
-    const libPath = './lib/libmetallayer.dylib';
-    const resolvedPath = resolveLibPath(libPath);
+function cocoaChain(window: Pointer, config: SurfaceConfiguration) {
+    const libPath = resolveLibPath('./lib/libmetallayer.dylib');
 
-    const { symbols: lib } = dlopen(resolvedPath, {
+    const { symbols: lib } = dlopen(libPath, {
         createMetalLayer: {
             returns: 'pointer',
-            args: ['pointer']
+            args: ['pointer', 'bool', 'bool', 'bool']
         },
     });
 
-    const layer = lib.createMetalLayer(window);
+    const hdr = (config.toneMapping?.mode == 'extended');
+    const displayP3 = (config.colorSpace == 'display-p3');
+
+    const layer = lib.createMetalLayer(window, true, hdr, displayP3);
     if (!layer) {
         throw new Error('CAMetalLayer creating error');
     }
@@ -114,8 +116,10 @@ export type SurfaceConfiguration = {
     height: number;
     format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float' | GPUTextureFormat;
     usage?: number;
-    alphaMode?: string;
+    alphaMode?: 'opaque' | 'premultiplied';
     vsync?: boolean;
+    toneMapping?: { mode: 'standard' | 'extended' };
+    colorSpace?: 'srgb' | 'display-p3';
 };
 
 function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration) {
@@ -124,8 +128,8 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     const formatDict = {
         rgba8unorm: 18,
         bgra8unorm: 23,
-        rgba16float: 34,
-        rgba32float: 35
+        // rgb10a2unorm: 26,
+        rgba16float: 34
     };
 
     const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
@@ -137,8 +141,10 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
 
     // 16 - RenderAttachment, 1 - CopySrc, 2 - CopyDst, 4 - TextureBinding, 8 - StorageBinding
     const usage = config.usage ?? 16;
+
     // 0 - Auto, 1 - Opaque, 2 - PreMultiplied, 3 - PostMultiplied, 4 - Inherit
-    const alphaMode = 1;
+    const alphaMode = config.alphaMode == 'premultiplied' ? 2 : 1;
+
     // 1 - fifo, 2 - fifo-relaxed, 3 - immediate, 4 - mailbox
     const presentMode = (config.vsync ?? true) ? 1 : 3;
 
@@ -147,7 +153,7 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     const view = new DataView(buffer.buffer);
     view.setBigUint64(8, BigInt(devicePtr), true);
     view.setUint32(16, format, true);
-    view.setBigUint64(24, BigInt(usage), true); // usage
+    view.setBigUint64(24, BigInt(usage), true);
     view.setUint32(32, config.width, true);
     view.setUint32(36, config.height, true);
     view.setUint32(56, alphaMode, true);
@@ -200,7 +206,7 @@ export class SurfaceContext {
         }
 
         const handles = this.glfw.getChainHandles(this.window);
-        const surface = createSurface(this._lib, this._instancePtr, handles);
+        const surface = createSurface(this._lib, this._instancePtr, handles, config);
 
         if (!surface) {
             throw new Error('Cannot create surface');

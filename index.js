@@ -387,14 +387,14 @@ var WGPUSType_SurfaceSourceMetalLayer = 4;
 var WGPUSType_SurfaceSourceWindowsHWND = 5;
 var WGPUSType_SurfaceSourceXlibWindow = 6;
 var WGPUSType_SurfaceSourceWaylandSurface = 7;
-function createSurface(lib, instance, handles) {
-  const chain = getSurfaceChain(handles);
+function createSurface(lib, instance, handles, config) {
+  const chain = getSurfaceChain(handles, config);
   const descriptor = new Uint8Array(24);
   const view = new DataView(descriptor.buffer);
   view.setBigUint64(0, BigInt(ptr2(chain)), true);
   return lib.wgpuInstanceCreateSurface(instance, ptr2(descriptor)) ?? null;
 }
-function getSurfaceChain(handles) {
+function getSurfaceChain(handles, config) {
   const { display, window } = handles;
   switch (getPlatformType()) {
     case "win32":
@@ -404,7 +404,7 @@ function getSurfaceChain(handles) {
     case "x11":
       return x11Chain(display, window);
     case "cocoa":
-      return cocoaChain(window);
+      return cocoaChain(window, config);
   }
 }
 function win32Chain(window) {
@@ -441,16 +441,17 @@ function waylandChain(display, waylandSurface) {
   view.setBigUint64(24, BigInt(waylandSurface), true);
   return chain;
 }
-function cocoaChain(window) {
-  const libPath2 = "./lib/libmetallayer.dylib";
-  const resolvedPath = resolveLibPath(libPath2);
-  const { symbols: lib } = dlopen2(resolvedPath, {
+function cocoaChain(window, config) {
+  const libPath2 = resolveLibPath("./lib/libmetallayer.dylib");
+  const { symbols: lib } = dlopen2(libPath2, {
     createMetalLayer: {
       returns: "pointer",
-      args: ["pointer"]
+      args: ["pointer", "bool", "bool", "bool"]
     }
   });
-  const layer = lib.createMetalLayer(window);
+  const hdr = config.toneMapping?.mode == "extended";
+  const displayP3 = config.colorSpace == "display-p3";
+  const layer = lib.createMetalLayer(window, true, hdr, displayP3);
   if (!layer) {
     throw new Error("CAMetalLayer creating error");
   }
@@ -465,8 +466,7 @@ function configureSurface(lib, surface, config) {
   const formatDict = {
     rgba8unorm: 18,
     bgra8unorm: 23,
-    rgba16float: 34,
-    rgba32float: 35
+    rgba16float: 34
   };
   const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
   if (!(formatKey in formatDict)) {
@@ -474,7 +474,7 @@ function configureSurface(lib, surface, config) {
   }
   const format = formatDict[formatKey];
   const usage = config.usage ?? 16;
-  const alphaMode = 1;
+  const alphaMode = config.alphaMode == "premultiplied" ? 2 : 1;
   const presentMode = config.vsync ?? true ? 1 : 3;
   const buffer = new Uint8Array(64);
   const view = new DataView(buffer.buffer);
@@ -523,7 +523,7 @@ class SurfaceContext {
       throw new Error("Surface context is already configured");
     }
     const handles = this.glfw.getChainHandles(this.window);
-    const surface = createSurface(this._lib, this._instancePtr, handles);
+    const surface = createSurface(this._lib, this._instancePtr, handles, config);
     if (!surface) {
       throw new Error("Cannot create surface");
     }
