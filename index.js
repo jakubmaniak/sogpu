@@ -123,6 +123,9 @@ var constants = {
   RELEASE: 0,
   PRESS: 1,
   REPEAT: 2,
+  MOUSE_BUTTON_LEFT: 0,
+  MOUSE_BUTTON_RIGHT: 1,
+  MOUSE_BUTTON_MIDDLE: 2,
   KEY_UNKNOWN: -1,
   MOD_SHIFT: 1,
   MOD_CONTROL: 2,
@@ -322,8 +325,22 @@ class GLFWAdapter {
     const titleBuffer = Buffer.from(title + "\x00");
     ffi_default.glfwSetWindowTitle(window, ptr(titleBuffer));
   }
+  getWindowSize(window) {
+    const result = new Int32Array(2);
+    const widthPtr = ptr(result);
+    const heightPtr = ptr(result, 4);
+    ffi_default.glfwGetWindowSize(window, widthPtr, heightPtr);
+    return { width: result[0], height: result[1] };
+  }
   setWindowSize(window, width, height) {
     ffi_default.glfwSetWindowSize(window, width, height);
+  }
+  getWindowPosition(window) {
+    const result = new Int32Array(2);
+    const xPtr = ptr(result);
+    const yPtr = ptr(result, 4);
+    ffi_default.glfwGetWindowPos(window, xPtr, yPtr);
+    return { x: result[0], y: result[1] };
   }
   setWindowPosition(window, x, y) {
     ffi_default.glfwSetWindowPos(window, x, y);
@@ -346,6 +363,9 @@ class GLFWAdapter {
   getMousePosition(window) {
     ffi_default.glfwGetCursorPos(window, this.mouseXPtr, this.mouseYPtr);
     return { x: this.mousePos[0], y: this.mousePos[1] };
+  }
+  getMouseButton(window, button) {
+    return ffi_default.glfwGetMouseButton(window, button) == ffi_default.PRESS;
   }
   getKeyState(window, key) {
     return ffi_default.glfwGetKey(window, key);
@@ -551,7 +571,7 @@ class WindowInstance {
     return new SurfaceContext(gpu, glfw2, this.ptr);
   }
   destroy() {
-    return glfw2.destroyWindow(this.ptr);
+    glfw2.destroyWindow(this.ptr);
   }
   shouldClose() {
     return glfw2.shouldClose(this.ptr);
@@ -562,8 +582,14 @@ class WindowInstance {
   setTitle(title) {
     glfw2.setWindowTitle(this.ptr, title);
   }
+  getSize() {
+    return glfw2.getWindowSize(this.ptr);
+  }
   setSize(width, height) {
     glfw2.setWindowSize(this.ptr, width, height);
+  }
+  getPosition() {
+    return glfw2.getWindowPosition(this.ptr);
   }
   setPosition(x, y) {
     glfw2.setWindowPosition(this.ptr, x, y);
@@ -579,6 +605,12 @@ class WindowInstance {
   }
   restore() {
     glfw2.restoreWindow(this.ptr);
+  }
+  isMouseButtonPressed(button) {
+    return glfw2.getMouseButton(this.ptr, button);
+  }
+  getMousePosition() {
+    return glfw2.getMousePosition(this.ptr);
   }
 }
 export {

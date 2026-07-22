@@ -12,7 +12,15 @@ export declare class GLFWAdapter {
     pollEvents(): void;
     shouldClose(window: Pointer): boolean;
     setWindowTitle(window: Pointer, title: string): void;
+    getWindowSize(window: Pointer): {
+        width: number;
+        height: number;
+    };
     setWindowSize(window: Pointer, width: number, height: number): void;
+    getWindowPosition(window: Pointer): {
+        x: number;
+        y: number;
+    };
     setWindowPosition(window: Pointer, x: number, y: number): void;
     setWindowResizable(window: Pointer, resizable: boolean): void;
     maximizeWindow(window: Pointer): void;
@@ -25,5 +33,6 @@ export declare class GLFWAdapter {
         x: number;
         y: number;
     };
+    getMouseButton(window: Pointer, button: number): boolean;
     getKeyState(window: Pointer, key: number): number;
 }

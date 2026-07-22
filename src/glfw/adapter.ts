@@ -86,8 +86,24 @@ export class GLFWAdapter {
         glfw.glfwSetWindowTitle(window, ptr(titleBuffer));
     }
 
+    getWindowSize(window: Pointer) {
+        const result = new Int32Array(2);
+        const widthPtr = ptr(result);
+        const heightPtr = ptr(result, 4);
+        glfw.glfwGetWindowSize(window, widthPtr, heightPtr);
+        return { width: result[0], height: result[1] };
+    }
+
     setWindowSize(window: Pointer, width: number, height: number) {
         glfw.glfwSetWindowSize(window, width, height);
+    }
+
+    getWindowPosition(window: Pointer) {
+        const result = new Int32Array(2);
+        const xPtr = ptr(result);
+        const yPtr = ptr(result, 4);
+        glfw.glfwGetWindowPos(window, xPtr, yPtr);
+        return { x: result[0], y: result[1] };
     }
 
     setWindowPosition(window: Pointer, x: number, y: number) {
@@ -117,6 +133,10 @@ export class GLFWAdapter {
     getMousePosition(window: Pointer) {
         glfw.glfwGetCursorPos(window, this.mouseXPtr, this.mouseYPtr);
         return { x: this.mousePos[0], y: this.mousePos[1] };
+    }
+
+    getMouseButton(window: Pointer, button: number) {
+        return glfw.glfwGetMouseButton(window, button) == glfw.PRESS;
     }
 
     getKeyState(window: Pointer, key: number) {

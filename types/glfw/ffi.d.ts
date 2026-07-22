@@ -19,6 +19,9 @@ declare const _default: {
     RELEASE: 0;
     PRESS: 1;
     REPEAT: 2;
+    MOUSE_BUTTON_LEFT: 0;
+    MOUSE_BUTTON_RIGHT: 1;
+    MOUSE_BUTTON_MIDDLE: 2;
     KEY_UNKNOWN: -1;
     MOD_SHIFT: 1;
     MOD_CONTROL: 2;
@@ -139,6 +142,9 @@ declare const _default: {
     RELEASE: 0;
     PRESS: 1;
     REPEAT: 2;
+    MOUSE_BUTTON_LEFT: 0;
+    MOUSE_BUTTON_RIGHT: 1;
+    MOUSE_BUTTON_MIDDLE: 2;
     KEY_UNKNOWN: -1;
     MOD_SHIFT: 1;
     MOD_CONTROL: 2;
@@ -263,6 +269,9 @@ declare const _default: {
     RELEASE: 0;
     PRESS: 1;
     REPEAT: 2;
+    MOUSE_BUTTON_LEFT: 0;
+    MOUSE_BUTTON_RIGHT: 1;
+    MOUSE_BUTTON_MIDDLE: 2;
     KEY_UNKNOWN: -1;
     MOD_SHIFT: 1;
     MOD_CONTROL: 2;
@@ -387,6 +396,9 @@ declare const _default: {
     RELEASE: 0;
     PRESS: 1;
     REPEAT: 2;
+    MOUSE_BUTTON_LEFT: 0;
+    MOUSE_BUTTON_RIGHT: 1;
+    MOUSE_BUTTON_MIDDLE: 2;
     KEY_UNKNOWN: -1;
     MOD_SHIFT: 1;
     MOD_CONTROL: 2;

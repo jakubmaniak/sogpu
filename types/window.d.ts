@@ -9,10 +9,23 @@ export declare class WindowInstance {
     shouldClose(): boolean;
     pollEvents(): void;
     setTitle(title: string): void;
+    getSize(): {
+        width: number;
+        height: number;
+    };
     setSize(width: number, height: number): void;
+    getPosition(): {
+        x: number;
+        y: number;
+    };
     setPosition(x: number, y: number): void;
     setResizable(resizable: boolean): void;
     maximize(): void;
     minimize(): void;
     restore(): void;
+    isMouseButtonPressed(button: number): boolean;
+    getMousePosition(): {
+        x: number;
+        y: number;
+    };
 }

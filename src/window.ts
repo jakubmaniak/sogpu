@@ -23,7 +23,7 @@ export class WindowInstance {
     }
 
     destroy() {
-        return glfw.destroyWindow(this.ptr);
+        glfw.destroyWindow(this.ptr);
     }
 
     shouldClose() {
@@ -38,8 +38,16 @@ export class WindowInstance {
         glfw.setWindowTitle(this.ptr, title);
     }
 
+    getSize() {
+        return glfw.getWindowSize(this.ptr);
+    }
+
     setSize(width: number, height: number) {
         glfw.setWindowSize(this.ptr, width, height);
+    }
+
+    getPosition() {
+        return glfw.getWindowPosition(this.ptr);
     }
 
     setPosition(x: number, y: number) {
@@ -60,5 +68,13 @@ export class WindowInstance {
 
     restore() {
         glfw.restoreWindow(this.ptr);
+    }
+
+    isMouseButtonPressed(button: number) {
+        return glfw.getMouseButton(this.ptr, button);
+    }
+
+    getMousePosition() {
+        return glfw.getMousePosition(this.ptr);
     }
 }
