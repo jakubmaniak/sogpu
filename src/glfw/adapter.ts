@@ -23,17 +23,7 @@ export class GLFWAdapter {
         glfw.glfwWindowHint(glfw.CLIENT_API, glfw.NO_API);
         glfw.glfwWindowHint(glfw.RESIZABLE, glfw.FALSE);
         glfw.glfwWindowHint(glfw.TRANSPARENT_FRAMEBUFFER, glfw.TRUE);
-        // glfw.glfwWindowHint(glfw.POSITION_X, 10);
-        // glfw.glfwWindowHint(glfw.POSITION_Y, 40);
-        // glfw.glfwWindowHint(glfw.FLOATING, glfw.TRUE);
-        // glfw.glfwWindowHint(glfw.DECORATED, glfw.FALSE);
-        // glfw.glfwWindowHint(glfw.MOUSE_PASSTHROUGH, glfw.TRUE);
-        // glfw.glfwWindowHint(glfw.REFRESH_RATE, glfw.DONT_CARE);
-        // glfw.glfwWindowHint(glfw.SRGB_CAPABLE, glfw.TRUE);
-        // glfw.glfwWindowHint(glfw.DOUBLEBUFFER, glfw.TRUE);
-        // glfw.glfwWindowHint(glfw.SAMPLES, 4);
 
-        // const titleBuffer = new TextEncoder().encode(title + '\0');
         const titleBuffer = Buffer.from(title + '\0');
 
         const window = glfw.glfwCreateWindow(width, height, ptr(titleBuffer), null, null);
@@ -121,7 +111,7 @@ export class GLFWAdapter {
     minimizeWindow(window: Pointer) {
         glfw.glfwIconifyWindow(window);
     }
-    
+
     restoreWindow(window: Pointer) {
         glfw.glfwRestoreWindow(window);
     }

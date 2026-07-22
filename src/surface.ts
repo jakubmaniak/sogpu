@@ -134,7 +134,7 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     }
 
     const format = formatDict[formatKey as keyof typeof formatDict];
-    
+
     // 16 - RenderAttachment, 1 - CopySrc, 2 - CopyDst, 4 - TextureBinding, 8 - StorageBinding
     const usage = config.usage ?? 16;
     // 0 - Auto, 1 - Opaque, 2 - PreMultiplied, 3 - PostMultiplied, 4 - Inherit
@@ -142,8 +142,7 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     // 1 - fifo, 2 - fifo-relaxed, 3 - immediate, 4 - mailbox
     const presentMode = (config.vsync ?? true) ? 1 : 3;
 
-    // const buffer = Buffer.alloc(64, 0);
-    // const buffer = new Uint32Array(16);
+
     const buffer = new Uint8Array(64);
     const view = new DataView(buffer.buffer);
     view.setBigUint64(8, BigInt(devicePtr), true);
@@ -231,20 +230,6 @@ export class SurfaceContext {
 
         queue.submit = submit.bind(queue);
     }
-
-    // getCurrentTexture() {
-        // return getCurrentTexture(this._lib, this.surface!);
-    // }
-
-    // getCurrentTexture(): GPUTexture {
-    //     const view = this.getCurrentTextureView();
-    //     return {
-    //         __brand: 'GPUTexture',
-    //         ptr: Number(this.currentTexture!) as Pointer,
-    //         destroy() { },
-    //         createView: () => view,
-    //     } as GPUTexture;
-    // }
 
     getCurrentTextureView() {
         if (!this.surface) {

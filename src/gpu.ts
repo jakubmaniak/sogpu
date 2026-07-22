@@ -59,11 +59,6 @@ export function createMappedBuffer<T extends GPUBufferSource>(device: GPUDevice,
         mappedAtCreation: true,
     });
 
-    // (
-    //     data instanceof Float32Array
-    //     ? new Float32Array(buffer.getMappedRange())
-    //     : new Uint32Array(buffer.getMappedRange())
-    // ).set(data);
     new (data as any).constructor(buffer.getMappedRange()).set(data);
 
     buffer.unmap();
@@ -99,5 +94,4 @@ export function addGPUErrorHandler(adapter: GPUAdapter) {
         console.error(`[WebGPU] Error (type=${typeInt}): ${message}`);
         process.exit(1);
     };
-    // device.onuncapturederror = (ev) => console.error('[WebGPU] Uncaptured:', ev.error.message || '[no msg]');
 }
