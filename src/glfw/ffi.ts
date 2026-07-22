@@ -34,7 +34,7 @@ const constants = {
     MOD_SUPER: 0x0008,
     MOD_CAPS_LOCK: 0x0010,
     MOD_NUM_LOCK: 0x0020,
-};
+} as const;
 
 
 const platform = getPlatformType();
@@ -116,13 +116,45 @@ const { symbols: glfw } = dlopen(libFilePath, {
         returns: FFIType.void,
         args: []
     },
-    glfwGetWindowSize: {
+    glfwSetWindowAttrib: {
         returns: FFIType.void,
-        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+        args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    },
+    glfwSetWindowTitle: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.cstring]
     },
     glfwSetWindowIcon: {
         returns: FFIType.void,
         args: [FFIType.pointer, FFIType.i32, FFIType.pointer]
+    },
+    glfwGetWindowSize: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    },
+    glfwSetWindowSize: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    },
+    glfwGetWindowPos: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    },
+    glfwSetWindowPos: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    },
+    glfwMaximizeWindow: {
+        returns: FFIType.void,
+        args: [FFIType.pointer]
+    },
+    glfwIconifyWindow: {
+        returns: FFIType.void,
+        args: [FFIType.pointer]
+    },
+    glfwRestoreWindow: {
+        returns: FFIType.void,
+        args: [FFIType.pointer]
     },
     glfwSetInputMode: {
         returns: FFIType.void,

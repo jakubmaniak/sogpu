@@ -1,11 +1,12 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "moduleResolution": "node",
+        "moduleResolution": "nodenext",
         "declaration": true,
         "emitDeclarationOnly": true,
         "noEmit": false,
 
+        "rootDir": "./src",
         "outDir": "./types"
     },
     "include": ["src"]

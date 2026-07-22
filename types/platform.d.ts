@@ -1,1 +1,1 @@
-export declare function getPlatformType(): "win32" | "cocoa" | "wayland" | "x11";
+export declare function getPlatformType(): "cocoa" | "wayland" | "win32" | "x11";

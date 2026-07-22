@@ -15,7 +15,7 @@ export class GLFWAdapter {
         }
     }
 
-    terminate() {
+    release() {
         glfw.glfwTerminate();
     }
 
@@ -79,6 +79,35 @@ export class GLFWAdapter {
 
     shouldClose(window: Pointer) {
         return glfw.glfwWindowShouldClose(window) != 0;
+    }
+
+    setWindowTitle(window: Pointer, title: string) {
+        const titleBuffer = Buffer.from(title + '\0');
+        glfw.glfwSetWindowTitle(window, ptr(titleBuffer));
+    }
+
+    setWindowSize(window: Pointer, width: number, height: number) {
+        glfw.glfwSetWindowSize(window, width, height);
+    }
+
+    setWindowPosition(window: Pointer, x: number, y: number) {
+        glfw.glfwSetWindowPos(window, x, y);
+    }
+
+    setWindowResizable(window: Pointer, resizable: boolean) {
+        glfw.glfwSetWindowAttrib(window, glfw.RESIZABLE, resizable ? glfw.TRUE : glfw.FALSE);
+    }
+
+    maximizeWindow(window: Pointer) {
+        glfw.glfwMaximizeWindow(window);
+    }
+
+    minimizeWindow(window: Pointer) {
+        glfw.glfwIconifyWindow(window);
+    }
+    
+    restoreWindow(window: Pointer) {
+        glfw.glfwRestoreWindow(window);
     }
 
     private readonly mousePos = new Float64Array(2);

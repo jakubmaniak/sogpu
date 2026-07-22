@@ -1,5 +1,4 @@
-/// <reference types="bun-types" />
-import { Pointer } from 'bun:ffi';
+import { type Pointer } from 'bun:ffi';
 import { SurfaceContext } from './surface.js';
 export declare class WindowInstance {
     readonly ptr: Pointer;
@@ -9,4 +8,11 @@ export declare class WindowInstance {
     destroy(): void;
     shouldClose(): boolean;
     pollEvents(): void;
+    setTitle(title: string): void;
+    setSize(width: number, height: number): void;
+    setPosition(x: number, y: number): void;
+    setResizable(resizable: boolean): void;
+    maximize(): void;
+    minimize(): void;
+    restore(): void;
 }

@@ -5,6 +5,7 @@ const adapterRequest = gpu.requestAdapter({ powerPreference: 'high-performance' 
 
 // let the user see the window immediately, while the adapter is being requested in the background
 const win = new WindowInstance(1280, 720, 'My GLFW Window');
+win.setResizable(true);
 
 const adapter = await adapterRequest;
 if (!adapter) {

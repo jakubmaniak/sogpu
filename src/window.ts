@@ -33,4 +33,32 @@ export class WindowInstance {
     pollEvents() {
         return glfw.pollEvents();
     }
+
+    setTitle(title: string) {
+        glfw.setWindowTitle(this.ptr, title);
+    }
+
+    setSize(width: number, height: number) {
+        glfw.setWindowSize(this.ptr, width, height);
+    }
+
+    setPosition(x: number, y: number) {
+        glfw.setWindowPosition(this.ptr, x, y);
+    }
+
+    setResizable(resizable: boolean) {
+        glfw.setWindowResizable(this.ptr, resizable);
+    }
+
+    maximize() {
+        glfw.maximizeWindow(this.ptr);
+    }
+
+    minimize() {
+        glfw.minimizeWindow(this.ptr);
+    }
+
+    restore() {
+        glfw.restoreWindow(this.ptr);
+    }
 }

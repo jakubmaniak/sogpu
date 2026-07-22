@@ -197,13 +197,45 @@ var { symbols: glfw } = dlopen(libFilePath, {
     returns: FFIType.void,
     args: []
   },
-  glfwGetWindowSize: {
+  glfwSetWindowAttrib: {
     returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+  },
+  glfwSetWindowTitle: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.cstring]
   },
   glfwSetWindowIcon: {
     returns: FFIType.void,
     args: [FFIType.pointer, FFIType.i32, FFIType.pointer]
+  },
+  glfwGetWindowSize: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+  },
+  glfwSetWindowSize: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+  },
+  glfwGetWindowPos: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+  },
+  glfwSetWindowPos: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+  },
+  glfwMaximizeWindow: {
+    returns: FFIType.void,
+    args: [FFIType.pointer]
+  },
+  glfwIconifyWindow: {
+    returns: FFIType.void,
+    args: [FFIType.pointer]
+  },
+  glfwRestoreWindow: {
+    returns: FFIType.void,
+    args: [FFIType.pointer]
   },
   glfwSetInputMode: {
     returns: FFIType.void,
@@ -239,7 +271,7 @@ class GLFWAdapter {
       throw new Error("Failed to initialize GLFW.");
     }
   }
-  terminate() {
+  release() {
     ffi_default.glfwTerminate();
   }
   createWindow(width, height, title) {
@@ -285,6 +317,28 @@ class GLFWAdapter {
   }
   shouldClose(window) {
     return ffi_default.glfwWindowShouldClose(window) != 0;
+  }
+  setWindowTitle(window, title) {
+    const titleBuffer = Buffer.from(title + "\x00");
+    ffi_default.glfwSetWindowTitle(window, ptr(titleBuffer));
+  }
+  setWindowSize(window, width, height) {
+    ffi_default.glfwSetWindowSize(window, width, height);
+  }
+  setWindowPosition(window, x, y) {
+    ffi_default.glfwSetWindowPos(window, x, y);
+  }
+  setWindowResizable(window, resizable) {
+    ffi_default.glfwSetWindowAttrib(window, ffi_default.RESIZABLE, resizable ? ffi_default.TRUE : ffi_default.FALSE);
+  }
+  maximizeWindow(window) {
+    ffi_default.glfwMaximizeWindow(window);
+  }
+  minimizeWindow(window) {
+    ffi_default.glfwIconifyWindow(window);
+  }
+  restoreWindow(window) {
+    ffi_default.glfwRestoreWindow(window);
   }
   mousePos = new Float64Array(2);
   mouseXPtr = ptr(this.mousePos);
@@ -504,6 +558,27 @@ class WindowInstance {
   }
   pollEvents() {
     return glfw2.pollEvents();
+  }
+  setTitle(title) {
+    glfw2.setWindowTitle(this.ptr, title);
+  }
+  setSize(width, height) {
+    glfw2.setWindowSize(this.ptr, width, height);
+  }
+  setPosition(x, y) {
+    glfw2.setWindowPosition(this.ptr, x, y);
+  }
+  setResizable(resizable) {
+    glfw2.setWindowResizable(this.ptr, resizable);
+  }
+  maximize() {
+    glfw2.maximizeWindow(this.ptr);
+  }
+  minimize() {
+    glfw2.minimizeWindow(this.ptr);
+  }
+  restore() {
+    glfw2.restoreWindow(this.ptr);
   }
 }
 export {
