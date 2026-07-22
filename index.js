@@ -51,30 +51,33 @@ function createMappedBuffer(device, data, usage) {
   buffer.unmap();
   return buffer;
 }
+var errorTypes = {
+  1: "NoError",
+  2: "Validation",
+  3: "OutOfMemory",
+  4: "Internal",
+  5: "Unknown"
+};
 function addGPUErrorHandler(adapter) {
-  adapter.handleUncapturedError = (devicePtr, typeInt, msgArg, sizeOrUserdata1, ud1, ud2) => {
+  adapter.handleUncapturedError = (devicePtr, errType, msgPtr, msgSize, ud1, ud2) => {
     let message = "[empty message]";
-    try {
-      if (msgArg) {
-        if (process.platform == "win32") {
-          const svBuf = toArrayBuffer(msgArg, 0, 16);
-          const dv = new DataView(svBuf);
-          const dataPtr = dv.getBigUint64(0, true);
-          const len = Number(dv.getBigUint64(8, true));
-          if (dataPtr !== 0n && len > 0 && len < 1e4) {
-            const strBuf = toArrayBuffer(Number(dataPtr), 0, len);
-            message = new TextDecoder().decode(strBuf);
-          }
-        } else {
-          const strBuf = toArrayBuffer(msgArg, 0, 1024);
-          const bytes = new Uint8Array(strBuf);
-          const nulPos = bytes.indexOf(0);
-          const end = nulPos == -1 ? bytes.length : nulPos;
-          message = new TextDecoder().decode(bytes.subarray(0, end));
+    let typeText = errorTypes[errType];
+    if (msgPtr) {
+      if (process.platform == "win32") {
+        const stringView = toArrayBuffer(msgPtr, 0, 16);
+        const dv = new DataView(stringView);
+        const dataPtr = dv.getBigUint64(0, true);
+        const length = Number(dv.getBigUint64(8, true));
+        if (dataPtr !== 0n && length > 0) {
+          const strBuf = toArrayBuffer(Number(dataPtr), 0, length);
+          message = new TextDecoder().decode(strBuf);
         }
+      } else {
+        const strBuf = toArrayBuffer(msgPtr, 0, Number(msgSize));
+        message = new TextDecoder().decode(strBuf);
       }
-    } catch {}
-    console.error(`[WebGPU] Error (type=${typeInt}): ${message}`);
+    }
+    console.error(`[WebGPU error] [${typeText}] ${message}`);
     process.exit(1);
   };
 }
@@ -473,7 +476,7 @@ function configureSurface(lib, surface, config) {
     throw new Error("Invalid or unknown surface format");
   }
   const format = formatDict[formatKey];
-  const usage = config.usage ?? 16;
+  const usage = config.usage ?? 16 /* RENDER_ATTACHMENT */;
   const alphaMode = config.alphaMode == "premultiplied" ? 2 : 1;
   const presentMode = config.vsync ?? true ? 1 : 3;
   const buffer = new Uint8Array(64);

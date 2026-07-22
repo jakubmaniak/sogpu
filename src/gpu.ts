@@ -1,5 +1,5 @@
 import { createGPUInstance } from 'bun-webgpu';
-import { toArrayBuffer } from 'bun:ffi';
+import { toArrayBuffer, type Pointer } from 'bun:ffi';
 
 
 export enum GPUBufferUsage {
@@ -67,32 +67,38 @@ export function createMappedBuffer<T extends GPUBufferSource>(device: GPUDevice,
 }
 
 
+const errorTypes = {
+    1: 'NoError',
+    2: 'Validation',
+    3: 'OutOfMemory',
+    4: 'Internal',
+    5: 'Unknown'
+};
+
 export function addGPUErrorHandler(adapter: GPUAdapter) {
-    (adapter as any).handleUncapturedError = (devicePtr: any, typeInt: any, msgArg: any, sizeOrUserdata1: any, ud1: any, ud2: any) => {
+    (adapter as any).handleUncapturedError = (devicePtr: Pointer, errType: number, msgPtr: Pointer, msgSize: BigInt, ud1: any, ud2: any) => {
         let message = '[empty message]';
-        try {
-            if (msgArg) {
-                if (process.platform == 'win32') {
-                    const svBuf = toArrayBuffer(msgArg, 0, 16);
-                    const dv = new DataView(svBuf);
-                    const dataPtr = dv.getBigUint64(0, true);
-                    const len = Number(dv.getBigUint64(8, true));
-                    if (dataPtr !== 0n && len > 0 && len < 10000) {
-                        const strBuf = toArrayBuffer(Number(dataPtr) as any, 0, len);
-                        message = new TextDecoder().decode(strBuf);
-                    }
-                }
-                else {
-                    const strBuf = toArrayBuffer(msgArg, 0, 1024);
-                    const bytes = new Uint8Array(strBuf);
-                    const nulPos = bytes.indexOf(0);
-                    const end = nulPos == -1 ? bytes.length : nulPos;
-                    message = new TextDecoder().decode(bytes.subarray(0, end));
+        let typeText = errorTypes[errType as keyof typeof errorTypes];
+
+        if (msgPtr) {
+            if (process.platform == 'win32') {
+                const stringView = toArrayBuffer(msgPtr, 0, 16);
+                const dv = new DataView(stringView);
+                const dataPtr = dv.getBigUint64(0, true);
+                const length = Number(dv.getBigUint64(8, true));
+
+                if (dataPtr !== 0n && length > 0) {
+                    const strBuf = toArrayBuffer(Number(dataPtr) as Pointer, 0, length);
+                    message = new TextDecoder().decode(strBuf);
                 }
             }
+            else {
+                const strBuf = toArrayBuffer(msgPtr, 0, Number(msgSize));
+                message = new TextDecoder().decode(strBuf);
+            }
         }
-        catch { }
-        console.error(`[WebGPU] Error (type=${typeInt}): ${message}`);
+
+        console.error(`[WebGPU error] [${typeText}] ${message}`);
         process.exit(1);
     };
 }
