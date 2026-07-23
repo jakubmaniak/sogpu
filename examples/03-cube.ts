@@ -124,9 +124,9 @@ const shader = device.createShaderModule({ code: /*wgsl*/`
 
 
     @vertex
-    fn vs(in: VertexIn)->VertexOut {
+    fn vs(in: VertexIn) -> VertexOut {
         var out: VertexOut;
-        out.pos = u.mvp * vec4(in.pos,1.0);
+        out.pos = u.mvp * vec4(in.pos, 1.0);
         out.col = in.col;
 
         return out;
@@ -134,7 +134,7 @@ const shader = device.createShaderModule({ code: /*wgsl*/`
 
     @fragment
     fn fs(in: VertexOut) -> @location(0) vec4f {
-        return vec4(in.col,1.0);
+        return vec4(in.col, 1.0);
     }
 ` });
 

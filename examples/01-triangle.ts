@@ -1,14 +1,15 @@
+// import { gpu, WindowInstance } from 'sogpu';
 import { gpu, WindowInstance } from '../src/index.js';
 
 
-const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' });
+const adapter = await gpu.requestAdapter();
 if (!adapter) {
     throw new Error('Failed to request GPU adapter.');
 }
 
-const win = new WindowInstance(1280, 720, 'My GLFW Window');
-
 const device = await adapter.requestDevice();
+
+const win = new WindowInstance(1280, 720, 'SoGPU - Triangle Example');
 
 const ctx = win.getContext();
 const preferredFormat = gpu.getPreferredCanvasFormat();
@@ -19,18 +20,18 @@ function init() {
     const shader = device.createShaderModule({
         code: /*wgsl*/`
             @vertex
-            fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4<f32> {
-                var pos = array<vec2<f32>, 3>(
-                    vec2<f32>(0.0, 0.5),
-                    vec2<f32>(-0.5, -0.5),
-                    vec2<f32>(0.5, -0.5)
+            fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
+                let pos = array<vec2f, 3>(
+                    vec2f(0.0, 0.5),
+                    vec2f(-0.5, -0.5),
+                    vec2f(0.5, -0.5)
                 );
-                return vec4<f32>(pos[vertexIndex], 0.0, 1.0);
+                return vec4f(pos[vertexIndex], 0.0, 1.0);
             }
 
             @fragment
-            fn fs_main() -> @location(0) vec4<f32> {
-                return vec4<f32>(1.0, 1.0, 0.0, 1.0);
+            fn fs() -> @location(0) vec4f {
+                return vec4f(1.0, 1.0, 0.0, 1.0);
             }
         `
     });
@@ -53,7 +54,7 @@ const passDesc = {
         view: null as unknown as GPUTextureView,
         loadOp: 'clear',
         storeOp: 'store',
-        clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.5 }
+        clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }
     }] as GPURenderPassColorAttachment[]
 } satisfies GPURenderPassDescriptor;
 

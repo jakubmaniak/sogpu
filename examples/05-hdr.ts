@@ -6,7 +6,7 @@ const adapterRequest = gpu.requestAdapter({
     preferBackend: 'dx11' // HDR will not work with Vulkan on Windows
 });
 
-const win = new WindowInstance(1280, 720, 'SoGPU  \u2013  HDR Example');
+const win = new WindowInstance(1280, 720, 'SoGPU - HDR Example');
 win.setResizable(true);
 
 const adapter = await adapterRequest;
@@ -53,7 +53,7 @@ function init() {
             @group(0) @binding(0) var<uniform> u: Uniforms;
 
             @vertex
-            fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
+            fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
                 let pos = array<vec2f, 6>(
                     vec2f(-1.0,  1.0),
                     vec2f(-1.0, -1.0),
@@ -70,7 +70,7 @@ function init() {
             }
 
             @fragment
-            fn fs_main() -> @location(0) vec4f{
+            fn fs() -> @location(0) vec4f {
                 let baseColor = vec3f(1.0, 1.0, u.mouseY / u.windowHeight);
                 return vec4f(baseColor * u.mouseX / u.windowWidth * 5.0, 1.0);
             }
