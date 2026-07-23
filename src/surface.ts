@@ -177,9 +177,8 @@ function getCurrentTextureView(lib: any, texture: bigint): Pointer {
 
 
 export class SurfaceContext {
-    private initialized = false;
     private _lib: any;
-    private _instancePtr: any;
+    private _instancePtr: Pointer;
     private window: Pointer;
     private surface: Pointer | null = null;
     private currentTexture: bigint | null = null;
@@ -195,16 +194,12 @@ export class SurfaceContext {
         if (!('instancePtr' in gpu)) {
             throw new Error('Cannot access WebGPU instancePtr property');
         }
-        this._instancePtr = gpu.instancePtr;
+        this._instancePtr = gpu.instancePtr as Pointer;
 
         this.window = window;
     }
 
     configure(config: SurfaceConfiguration) {
-        if (this.initialized) {
-            throw new Error('Surface context is already configured');
-        }
-
         const handles = this.glfw.getChainHandles(this.window);
         const surface = createSurface(this._lib, this._instancePtr, handles, config);
 
@@ -216,10 +211,11 @@ export class SurfaceContext {
         configureSurface(this._lib, this.surface, config);
 
         this.wrapDevice(config.device);
-        this.initialized = true;
     }
 
     private wrapDevice(device: GPUDevice) {
+        if ((device.queue.submit as any).__wrapped__) return;
+
         const queue = device.queue;
         const submitFn = queue.submit.bind(queue);
 
@@ -235,6 +231,7 @@ export class SurfaceContext {
         }
 
         queue.submit = submit.bind(queue);
+        (queue.submit as any).__wrapped__ = true;
     }
 
     getCurrentTextureView() {

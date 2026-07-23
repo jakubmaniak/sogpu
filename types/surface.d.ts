@@ -15,7 +15,6 @@ export type SurfaceConfiguration = {
 };
 export declare class SurfaceContext {
     private glfw;
-    private initialized;
     private _lib;
     private _instancePtr;
     private window;

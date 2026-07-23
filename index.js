@@ -519,7 +519,6 @@ function getCurrentTextureView(lib, texture) {
 
 class SurfaceContext {
   glfw;
-  initialized = false;
   _lib;
   _instancePtr;
   window;
@@ -539,9 +538,6 @@ class SurfaceContext {
     this.window = window;
   }
   configure(config) {
-    if (this.initialized) {
-      throw new Error("Surface context is already configured");
-    }
     const handles = this.glfw.getChainHandles(this.window);
     const surface = createSurface(this._lib, this._instancePtr, handles, config);
     if (!surface) {
@@ -550,9 +546,10 @@ class SurfaceContext {
     this.surface = surface;
     configureSurface(this._lib, this.surface, config);
     this.wrapDevice(config.device);
-    this.initialized = true;
   }
   wrapDevice(device) {
+    if (device.queue.submit.__wrapped__)
+      return;
     const queue = device.queue;
     const submitFn = queue.submit.bind(queue);
     function submit(commandBuffers) {
@@ -562,6 +559,7 @@ class SurfaceContext {
       }
     }
     queue.submit = submit.bind(queue);
+    queue.submit.__wrapped__ = true;
   }
   getCurrentTextureView() {
     if (!this.surface) {
