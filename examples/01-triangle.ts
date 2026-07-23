@@ -13,7 +13,7 @@ const win = new WindowInstance(1280, 720, 'SoGPU - Triangle Example');
 
 const ctx = win.getContext();
 const preferredFormat = gpu.getPreferredCanvasFormat();
-ctx.configure({ device, width: 1280, height: 720, format: preferredFormat });
+ctx.configure({ device, format: preferredFormat });
 
 
 function init() {

@@ -23,7 +23,11 @@ addGPUErrorHandler(adapter);
 
 const ctx = win.getContext();
 const preferredFormat = gpu.getPreferredCanvasFormat();
-ctx.configure({ device, width: 1280, height: 720, format: preferredFormat });
+ctx.configure({
+    device,
+    format: preferredFormat,
+    size: { width: 1280, height: 720 }
+});
 
 
 function init() {

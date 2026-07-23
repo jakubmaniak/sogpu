@@ -1,6 +1,6 @@
 import { dlopen, ptr, type Pointer } from 'bun:ffi';
 import { type GLFWAdapter } from './glfw/adapter.js';
-import { gpu } from './gpu.js';
+import { gpu, GPUTextureUsage, type Extent2D } from './gpu.js';
 import { getPlatformType, resolveLibPath } from './platform.js';
 
 
@@ -120,8 +120,7 @@ function cocoaChain(window: Pointer, config: SurfaceConfiguration) {
 
 export type SurfaceConfiguration = {
     device: GPUDevice;
-    width: number;
-    height: number;
+    size?: Extent2D;
     format?: 'rgba8unorm' | 'bgra8unorm' | 'rgba16float' | GPUTextureFormat;
     usage?: number;
     alphaMode?: 'opaque' | 'premultiplied';
@@ -130,7 +129,7 @@ export type SurfaceConfiguration = {
     colorSpace?: 'srgb' | 'display-p3';
 };
 
-function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration) {
+function configureSurface(lib: any, surface: Pointer, config: SurfaceConfiguration, size: Extent2D) {
     const devicePtr = config.device.ptr;
 
     const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
@@ -139,9 +138,7 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     }
 
     const format = textureFormats[formatKey as keyof typeof textureFormats];
-
-    // 16 - RenderAttachment, 1 - CopySrc, 2 - CopyDst, 4 - TextureBinding, 8 - StorageBinding
-    const usage = config.usage ?? 16;
+    const usage = config.usage ?? GPUTextureUsage.RENDER_ATTACHMENT;
 
     // 0 - Auto, 1 - Opaque, 2 - PreMultiplied, 3 - PostMultiplied, 4 - Inherit
     const alphaMode = config.alphaMode == 'premultiplied' ? 2 : 1;
@@ -155,8 +152,8 @@ function configureSurface(lib: any, surface: Pointer, config: SurfaceConfigurati
     view.setBigUint64(8, BigInt(devicePtr), true);
     view.setUint32(16, format, true);
     view.setBigUint64(24, BigInt(usage), true);
-    view.setUint32(32, config.width, true);
-    view.setUint32(36, config.height, true);
+    view.setUint32(32, size.width, true);
+    view.setUint32(36, size.height, true);
     view.setUint32(56, alphaMode, true);
     view.setUint32(60, presentMode, true);
 
@@ -180,13 +177,14 @@ function getCurrentTextureView(lib: any, texture: bigint): Pointer {
 export class SurfaceContext {
     private _lib: any;
     private _instancePtr: Pointer;
-    private _config?: SurfaceConfiguration;
     private _textureCtr!: new(...args: any[]) => GPUTexture;
+
+    private config?: SurfaceConfiguration;
     private window: Pointer;
     private surface: Pointer | null = null;
+    private size?: Extent2D;
     private currentTexture: bigint | null = null;
     private currentTextureView: Pointer | null = null;
-
 
     constructor(gpu: GPU, private glfw: GLFWAdapter, window: Pointer) {
         if (!('lib' in gpu)) {
@@ -204,29 +202,37 @@ export class SurfaceContext {
 
     configure(config: SurfaceConfiguration) {
         const handles = this.glfw.getChainHandles(this.window);
-        const surface = createSurface(this._lib, this._instancePtr, handles, config);
+        const size = this.glfw.getWindowSize(this.window);
 
+        const surface = createSurface(
+            this._lib,
+            this._instancePtr,
+            handles,
+            config
+        );
         if (!surface) {
             throw new Error('Cannot create surface');
         }
+
         this.surface = surface;
+        this.size = size;
 
-        configureSurface(this._lib, this.surface, config);
-        this._config = { ...config };
+        configureSurface(this._lib, this.surface, config, size);
+        this.config = { ...config };
 
-        this.wrapDevice(config.device);
+        this.wrapQueueSubmit(config.device);
 
         if (!this._textureCtr) {
             const tex = config.device.createTexture({
                 size: [1, 1],
                 format: 'rgba8unorm',
-                usage: 4
+                usage: 1
             });
             this._textureCtr = (tex as any).__proto__.constructor;
         }
     }
 
-    private wrapDevice(device: GPUDevice) {
+    private wrapQueueSubmit(device: GPUDevice) {
         if ((device.queue.submit as any).__wrapped__) return;
 
         const queue = device.queue;
@@ -280,13 +286,13 @@ export class SurfaceContext {
 
         this.currentTexture = texture;
 
-        const usage = this._config!.usage ?? 16;
-        const format = (textureFormats as any)[this._config!.format ?? 'bgra8unorm'];
+        const usage = this.config!.usage ?? 16;
+        const format = (textureFormats as any)[this.config!.format ?? 'bgra8unorm'];
 
         return new this._textureCtr(
             Number(texture),
             this._lib,
-            this._config!.width, this._config!.height, 1,
+            this.size!.width, this.size!.height, 1,
             format, 2, 1, 1, usage
         );
     }

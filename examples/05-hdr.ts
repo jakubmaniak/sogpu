@@ -27,8 +27,6 @@ const ctx = win.getContext();
 const preferredFormat: GPUTextureFormat = 'rgba16float';
 ctx.configure({
     device,
-    width: 1280,
-    height: 720,
     format: preferredFormat,
     toneMapping: { mode: 'extended' },
     colorSpace: 'srgb'

@@ -24,6 +24,10 @@ export declare enum GPUShaderStage {
     FRAGMENT = 2,
     COMPUTE = 4
 }
+export type Extent2D = {
+    width: number;
+    height: number;
+};
 export type GPUBufferSource = Float32Array<ArrayBufferLike> | Uint32Array<ArrayBufferLike> | Uint16Array<ArrayBufferLike>;
 type GPU = {
     requestAdapter(options?: GPUAdapterRequestOptions): Promise<GPUAdapter | null>;

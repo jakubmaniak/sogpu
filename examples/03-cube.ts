@@ -21,8 +21,6 @@ const canvasFormat = gpu.getPreferredCanvasFormat();
 const ctx = win.getContext();
 ctx.configure({
     device,
-    width: 1280,
-    height: 800,
     format: canvasFormat,
     vsync: false
 });

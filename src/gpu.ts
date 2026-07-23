@@ -31,6 +31,11 @@ export enum GPUShaderStage {
 }
 
 
+export type Extent2D = {
+    width: number;
+    height: number;
+};
+
 export type GPUBufferSource = Float32Array<ArrayBufferLike>
     | Uint32Array<ArrayBufferLike>
     | Uint16Array<ArrayBufferLike>;
