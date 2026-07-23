@@ -403,10 +403,6 @@ class GLFWAdapter {
 
 // src/surface.ts
 import { dlopen as dlopen2, ptr as ptr2 } from "bun:ffi";
-var WGPUSType_SurfaceSourceMetalLayer = 4;
-var WGPUSType_SurfaceSourceWindowsHWND = 5;
-var WGPUSType_SurfaceSourceXlibWindow = 6;
-var WGPUSType_SurfaceSourceWaylandSurface = 7;
 function createSurface(lib, instance, handles, config) {
   const chain = getSurfaceChain(handles, config);
   const descriptor = new Uint8Array(24);
@@ -427,6 +423,15 @@ function getSurfaceChain(handles, config) {
       return cocoaChain(window, config);
   }
 }
+var textureFormats = {
+  rgba8unorm: 18,
+  bgra8unorm: 23,
+  rgba16float: 34
+};
+var surfaceSourceMetalLayer = 4;
+var surfaceSourceWindowsHWND = 5;
+var surfaceSourceXlibWindow = 6;
+var surfaceSourceWaylandSurface = 7;
 function win32Chain(window) {
   const { symbols: k32 } = dlopen2("kernel32.dll", {
     GetModuleHandleW: {
@@ -440,7 +445,7 @@ function win32Chain(window) {
   }
   const chain = new Uint8Array(32);
   const view = new DataView(chain.buffer);
-  view.setUint32(8, WGPUSType_SurfaceSourceWindowsHWND, true);
+  view.setUint32(8, surfaceSourceWindowsHWND, true);
   view.setBigUint64(16, BigInt(hinstancePtr), true);
   view.setBigUint64(24, BigInt(window), true);
   return chain;
@@ -448,7 +453,7 @@ function win32Chain(window) {
 function x11Chain(display, window) {
   const chain = new Uint8Array(32);
   const view = new DataView(chain.buffer);
-  view.setUint32(8, WGPUSType_SurfaceSourceXlibWindow, true);
+  view.setUint32(8, surfaceSourceXlibWindow, true);
   view.setBigUint64(16, BigInt(display), true);
   view.setBigUint64(24, BigInt(window), true);
   return chain;
@@ -456,7 +461,7 @@ function x11Chain(display, window) {
 function waylandChain(display, waylandSurface) {
   const chain = new Uint8Array(32);
   const view = new DataView(chain.buffer);
-  view.setUint32(8, WGPUSType_SurfaceSourceWaylandSurface, true);
+  view.setUint32(8, surfaceSourceWaylandSurface, true);
   view.setBigUint64(16, BigInt(display), true);
   view.setBigUint64(24, BigInt(waylandSurface), true);
   return chain;
@@ -477,22 +482,17 @@ function cocoaChain(window, config) {
   }
   const chain = new Uint8Array(24);
   const view = new DataView(chain.buffer);
-  view.setUint32(8, WGPUSType_SurfaceSourceMetalLayer, true);
+  view.setUint32(8, surfaceSourceMetalLayer, true);
   view.setBigUint64(16, BigInt(layer), true);
   return chain;
 }
 function configureSurface(lib, surface, config) {
   const devicePtr = config.device.ptr;
-  const formatDict = {
-    rgba8unorm: 18,
-    bgra8unorm: 23,
-    rgba16float: 34
-  };
   const formatKey = config.format ?? gpu.getPreferredCanvasFormat();
-  if (!(formatKey in formatDict)) {
+  if (!(formatKey in textureFormats)) {
     throw new Error("Invalid or unknown surface format");
   }
-  const format = formatDict[formatKey];
+  const format = textureFormats[formatKey];
   const usage = config.usage ?? 16;
   const alphaMode = config.alphaMode == "premultiplied" ? 2 : 1;
   const presentMode = config.vsync ?? true ? 1 : 3;
@@ -521,6 +521,8 @@ class SurfaceContext {
   glfw;
   _lib;
   _instancePtr;
+  _config;
+  _textureCtr;
   window;
   surface = null;
   currentTexture = null;
@@ -545,7 +547,16 @@ class SurfaceContext {
     }
     this.surface = surface;
     configureSurface(this._lib, this.surface, config);
+    this._config = { ...config };
     this.wrapDevice(config.device);
+    if (!this._textureCtr) {
+      const tex = config.device.createTexture({
+        size: [1, 1],
+        format: "rgba8unorm",
+        usage: 4
+      });
+      this._textureCtr = tex.__proto__.constructor;
+    }
   }
   wrapDevice(device) {
     if (device.queue.submit.__wrapped__)
@@ -574,6 +585,16 @@ class SurfaceContext {
       ptr: pointer,
       destroy() {}
     };
+  }
+  getCurrentTexture() {
+    if (!this.surface) {
+      throw new Error("Surface context is not configured");
+    }
+    const texture = getCurrentTexture(this._lib, this.surface);
+    this.currentTexture = texture;
+    const usage = this._config.usage ?? 16;
+    const format = textureFormats[this._config.format ?? "bgra8unorm"];
+    return new this._textureCtr(Number(texture), this._lib, this._config.width, this._config.height, 1, format, 1, 1, 1, usage);
   }
   present() {
     this._lib.wgpuSurfacePresent(this.surface);

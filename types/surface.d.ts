@@ -17,6 +17,8 @@ export declare class SurfaceContext {
     private glfw;
     private _lib;
     private _instancePtr;
+    private _config?;
+    private _textureCtr;
     private window;
     private surface;
     private currentTexture;
@@ -25,5 +27,12 @@ export declare class SurfaceContext {
     configure(config: SurfaceConfiguration): void;
     private wrapDevice;
     getCurrentTextureView(): GPUTextureView;
+    /**
+     * @deprecated
+     * This method exists only for compatibility.
+     *
+     * Use `getCurrentTextureView()` instead for better performance and memory management.
+     */
+    getCurrentTexture(): GPUTexture;
     present(): void;
 }
