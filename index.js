@@ -135,11 +135,15 @@ var constants = {
   FALSE: 0,
   TRUE: 1,
   DONT_CARE: -1,
+  FOCUSED: 131073,
+  ICONIFIED: 131074,
   RESIZABLE: 131075,
   VISIBLE: 131076,
   DECORATED: 131077,
   FLOATING: 131079,
+  MAXIMIZED: 131080,
   TRANSPARENT_FRAMEBUFFER: 131082,
+  HOVERED: 131083,
   MOUSE_PASSTHROUGH: 131085,
   POSITION_X: 131086,
   POSITION_Y: 131087,
@@ -229,6 +233,10 @@ var { symbols: glfw } = dlopen(libFilePath, {
     returns: FFIType.void,
     args: []
   },
+  glfwGetWindowAttrib: {
+    returns: FFIType.i32,
+    args: [FFIType.pointer, FFIType.i32]
+  },
   glfwSetWindowAttrib: {
     returns: FFIType.void,
     args: [FFIType.pointer, FFIType.i32, FFIType.i32]
@@ -310,6 +318,7 @@ class GLFWAdapter {
     ffi_default.glfwWindowHint(ffi_default.CLIENT_API, ffi_default.NO_API);
     ffi_default.glfwWindowHint(ffi_default.RESIZABLE, ffi_default.FALSE);
     ffi_default.glfwWindowHint(ffi_default.TRANSPARENT_FRAMEBUFFER, ffi_default.TRUE);
+    ffi_default.glfwWindowHint(ffi_default.SRGB_CAPABLE, ffi_default.TRUE);
     const titleBuffer = Buffer.from(title + "\x00");
     const window = ffi_default.glfwCreateWindow(width, height, ptr(titleBuffer), null, null);
     if (!window) {
@@ -385,6 +394,21 @@ class GLFWAdapter {
   }
   restoreWindow(window) {
     ffi_default.glfwRestoreWindow(window);
+  }
+  isWindowMaximized(window) {
+    return ffi_default.glfwGetWindowAttrib(window, ffi_default.MAXIMIZED) == 1;
+  }
+  isWindowMinimized(window) {
+    return ffi_default.glfwGetWindowAttrib(window, ffi_default.ICONIFIED) == 1;
+  }
+  isWindowVisible(window) {
+    return ffi_default.glfwGetWindowAttrib(window, ffi_default.VISIBLE) == 1;
+  }
+  isWindowFocused(window) {
+    return ffi_default.glfwGetWindowAttrib(window, ffi_default.FOCUSED) == 1;
+  }
+  isWindowHovered(window) {
+    return ffi_default.glfwGetWindowAttrib(window, ffi_default.HOVERED) == 1;
   }
   mousePos = new Float64Array(2);
   mouseXPtr = ptr(this.mousePos);
@@ -594,7 +618,7 @@ class SurfaceContext {
     this.currentTexture = texture;
     const usage = this._config.usage ?? 16;
     const format = textureFormats[this._config.format ?? "bgra8unorm"];
-    return new this._textureCtr(Number(texture), this._lib, this._config.width, this._config.height, 1, format, 1, 1, 1, usage);
+    return new this._textureCtr(Number(texture), this._lib, this._config.width, this._config.height, 1, format, 2, 1, 1, usage);
   }
   present() {
     this._lib.wgpuSurfacePresent(this.surface);
@@ -654,6 +678,21 @@ class WindowInstance {
   }
   restore() {
     glfw2.restoreWindow(this.ptr);
+  }
+  isMaximized() {
+    return glfw2.isWindowMaximized(this.ptr);
+  }
+  isMinimized() {
+    return glfw2.isWindowMinimized(this.ptr);
+  }
+  isVisible() {
+    return glfw2.isWindowVisible(this.ptr);
+  }
+  isFocused() {
+    return glfw2.isWindowFocused(this.ptr);
+  }
+  isHovered() {
+    return glfw2.isWindowHovered(this.ptr);
   }
   isMouseButtonPressed(button) {
     return glfw2.getMouseButton(this.ptr, button);

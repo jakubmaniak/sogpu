@@ -70,6 +70,26 @@ export class WindowInstance {
         glfw.restoreWindow(this.ptr);
     }
 
+    isMaximized() {
+        return glfw.isWindowMaximized(this.ptr);
+    }
+
+    isMinimized() {
+        return glfw.isWindowMinimized(this.ptr);
+    }
+
+    isVisible() {
+        return glfw.isWindowVisible(this.ptr);
+    }
+
+    isFocused() {
+        return glfw.isWindowFocused(this.ptr);
+    }
+
+    isHovered() {
+        return glfw.isWindowHovered(this.ptr);
+    }
+
     isMouseButtonPressed(button: number) {
         return glfw.getMouseButton(this.ptr, button);
     }

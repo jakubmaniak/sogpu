@@ -26,6 +26,11 @@ export declare class GLFWAdapter {
     maximizeWindow(window: Pointer): void;
     minimizeWindow(window: Pointer): void;
     restoreWindow(window: Pointer): void;
+    isWindowMaximized(window: Pointer): boolean;
+    isWindowMinimized(window: Pointer): boolean;
+    isWindowVisible(window: Pointer): boolean;
+    isWindowFocused(window: Pointer): boolean;
+    isWindowHovered(window: Pointer): boolean;
     private readonly mousePos;
     private readonly mouseXPtr;
     private readonly mouseYPtr;

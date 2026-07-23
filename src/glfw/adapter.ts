@@ -23,6 +23,7 @@ export class GLFWAdapter {
         glfw.glfwWindowHint(glfw.CLIENT_API, glfw.NO_API);
         glfw.glfwWindowHint(glfw.RESIZABLE, glfw.FALSE);
         glfw.glfwWindowHint(glfw.TRANSPARENT_FRAMEBUFFER, glfw.TRUE);
+        glfw.glfwWindowHint(glfw.SRGB_CAPABLE, glfw.TRUE);
 
         const titleBuffer = Buffer.from(title + '\0');
 
@@ -114,6 +115,26 @@ export class GLFWAdapter {
 
     restoreWindow(window: Pointer) {
         glfw.glfwRestoreWindow(window);
+    }
+
+    isWindowMaximized(window: Pointer) {
+        return glfw.glfwGetWindowAttrib(window, glfw.MAXIMIZED) == 1;
+    }
+
+    isWindowMinimized(window: Pointer) {
+        return glfw.glfwGetWindowAttrib(window, glfw.ICONIFIED) == 1;
+    }
+
+    isWindowVisible(window: Pointer) {
+        return glfw.glfwGetWindowAttrib(window, glfw.VISIBLE) == 1;
+    }
+
+    isWindowFocused(window: Pointer) {
+        return glfw.glfwGetWindowAttrib(window, glfw.FOCUSED) == 1;
+    }
+
+    isWindowHovered(window: Pointer) {
+        return glfw.glfwGetWindowAttrib(window, glfw.HOVERED) == 1;
     }
 
     private readonly mousePos = new Float64Array(2);

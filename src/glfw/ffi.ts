@@ -7,11 +7,15 @@ const constants = {
     TRUE: 1,
     DONT_CARE: -1,
 
+    FOCUSED: 0x00020001,
+    ICONIFIED: 0x00020002,
     RESIZABLE: 0x00020003,
     VISIBLE: 0x00020004,
     DECORATED: 0x00020005,
     FLOATING: 0x00020007,
+    MAXIMIZED: 0x00020008,
     TRANSPARENT_FRAMEBUFFER: 0x0002000A,
+    HOVERED: 0x0002000B,
     MOUSE_PASSTHROUGH: 0x0002000D,
     POSITION_X: 0x0002000E,
     POSITION_Y: 0x0002000F,
@@ -112,6 +116,10 @@ const { symbols: glfw } = dlopen(libFilePath, {
     glfwPollEvents: {
         returns: FFIType.void,
         args: []
+    },
+    glfwGetWindowAttrib: {
+        returns: FFIType.i32,
+        args: [FFIType.pointer, FFIType.i32]
     },
     glfwSetWindowAttrib: {
         returns: FFIType.void,

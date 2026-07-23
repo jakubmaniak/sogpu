@@ -287,7 +287,7 @@ export class SurfaceContext {
             Number(texture),
             this._lib,
             this._config!.width, this._config!.height, 1,
-            format, 1, 1, 1, usage
+            format, 2, 1, 1, usage
         );
     }
 

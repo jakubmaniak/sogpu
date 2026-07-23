@@ -2,11 +2,15 @@ declare const _default: {
     FALSE: 0;
     TRUE: 1;
     DONT_CARE: -1;
+    FOCUSED: 131073;
+    ICONIFIED: 131074;
     RESIZABLE: 131075;
     VISIBLE: 131076;
     DECORATED: 131077;
     FLOATING: 131079;
+    MAXIMIZED: 131080;
     TRANSPARENT_FRAMEBUFFER: 131082;
+    HOVERED: 131083;
     MOUSE_PASSTHROUGH: 131085;
     POSITION_X: 131086;
     POSITION_Y: 131087;
@@ -59,6 +63,10 @@ declare const _default: {
     };
     glfwPollEvents: {
         (): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowAttrib: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwSetWindowAttrib: {
@@ -125,11 +133,15 @@ declare const _default: {
     FALSE: 0;
     TRUE: 1;
     DONT_CARE: -1;
+    FOCUSED: 131073;
+    ICONIFIED: 131074;
     RESIZABLE: 131075;
     VISIBLE: 131076;
     DECORATED: 131077;
     FLOATING: 131079;
+    MAXIMIZED: 131080;
     TRANSPARENT_FRAMEBUFFER: 131082;
+    HOVERED: 131083;
     MOUSE_PASSTHROUGH: 131085;
     POSITION_X: 131086;
     POSITION_Y: 131087;
@@ -188,6 +200,10 @@ declare const _default: {
         (): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwGetWindowAttrib: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetWindowAttrib: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -252,11 +268,15 @@ declare const _default: {
     FALSE: 0;
     TRUE: 1;
     DONT_CARE: -1;
+    FOCUSED: 131073;
+    ICONIFIED: 131074;
     RESIZABLE: 131075;
     VISIBLE: 131076;
     DECORATED: 131077;
     FLOATING: 131079;
+    MAXIMIZED: 131080;
     TRANSPARENT_FRAMEBUFFER: 131082;
+    HOVERED: 131083;
     MOUSE_PASSTHROUGH: 131085;
     POSITION_X: 131086;
     POSITION_Y: 131087;
@@ -315,6 +335,10 @@ declare const _default: {
         (): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwGetWindowAttrib: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetWindowAttrib: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -379,11 +403,15 @@ declare const _default: {
     FALSE: 0;
     TRUE: 1;
     DONT_CARE: -1;
+    FOCUSED: 131073;
+    ICONIFIED: 131074;
     RESIZABLE: 131075;
     VISIBLE: 131076;
     DECORATED: 131077;
     FLOATING: 131079;
+    MAXIMIZED: 131080;
     TRANSPARENT_FRAMEBUFFER: 131082;
+    HOVERED: 131083;
     MOUSE_PASSTHROUGH: 131085;
     POSITION_X: 131086;
     POSITION_Y: 131087;
@@ -436,6 +464,10 @@ declare const _default: {
     };
     glfwPollEvents: {
         (): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowAttrib: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwSetWindowAttrib: {

@@ -23,6 +23,11 @@ export declare class WindowInstance {
     maximize(): void;
     minimize(): void;
     restore(): void;
+    isMaximized(): boolean;
+    isMinimized(): boolean;
+    isVisible(): boolean;
+    isFocused(): boolean;
+    isHovered(): boolean;
     isMouseButtonPressed(button: number): boolean;
     getMousePosition(): {
         x: number;
