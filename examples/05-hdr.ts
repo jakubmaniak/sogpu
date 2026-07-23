@@ -1,7 +1,10 @@
-import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, GPUShaderStage, WindowInstance, type GPUBufferSource } from '../src/index.js';
+import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, WindowInstance, type GPUBufferSource } from '../src/index.js';
 
 
-const adapterRequest = gpu.requestAdapter({ powerPreference: 'high-performance' });
+const adapterRequest = gpu.requestAdapter({
+    powerPreference: 'high-performance',
+    preferBackend: 'dx11' // HDR will not work with Vulkan on Windows
+});
 
 const win = new WindowInstance(1280, 720, 'SoGPU  \u2013  HDR Example');
 win.setResizable(true);

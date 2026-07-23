@@ -36,15 +36,52 @@ export type GPUBufferSource = Float32Array<ArrayBufferLike>
     | Uint16Array<ArrayBufferLike>;
 
 
-type GPU = ReturnType<typeof createGPUInstance>;
-export const gpu: GPU = createGPUInstance();
-const requestAdapterFn = gpu.requestAdapter;
+type GPU = {
+    requestAdapter(options?: GPUAdapterRequestOptions): Promise<GPUAdapter | null>;
+} & ReturnType<typeof createGPUInstance>;
 
-gpu.requestAdapter = function(options?: GPURequestAdapterOptions) {
-    return requestAdapterFn.call(gpu, {
-        ...options,
-        backendType: process.platform == 'darwin' ? 'Metal' : 'Vulkan'
-    } satisfies GPURequestAdapterOptions & { backendType: string } as any);
+type GPUAdapterRequestOptions = GPURequestAdapterOptions & {
+    /**
+     * Used on **Windows** to select the preffered WebGPU backend.
+     * Ignored on other platforms.
+     * 
+     * - `"dx12"` - use DirectX 12 if available; otherwise, fall back to DirectX 11, then Vulkan.
+     * - `"dx11"` - use DirectX 11 if available; otherwise, Vulkan.
+     * - `"vulkan"` - use Vulkan if available; otherwise, DirectX 11.
+     * 
+     * Default: `"vulkan"`.
+    */
+    preferBackend?: 'dx12' | 'dx11' | 'vulkan';
+};
+
+export const gpu: GPU = createGPUInstance();
+const requestAdapterFn = gpu.requestAdapter.bind(gpu);
+
+gpu.requestAdapter = async function(options?: GPUAdapterRequestOptions) {
+    function request(backendType: string) {
+        return requestAdapterFn({
+            ...options,
+            backendType,
+        } satisfies GPUAdapterRequestOptions & { backendType: string } as any);
+    }
+
+    if (process.platform == 'win32') {
+        const preferred = options?.preferBackend ?? 'vulkan';
+        const backendCandidates = {
+            'dx11': ['D3D11', 'Vulkan'],
+            'dx12': ['D3D12', 'D3D11', 'Vulkan'],
+            'vulkan': ['Vulkan', 'D3D11']
+        }[preferred] ?? ['Vulkan', 'D3D11'];
+
+        for (const backendType of backendCandidates) {
+            const adapter = await request(backendType).catch(() => null);
+            if (adapter) return adapter;
+        }
+
+        return null;
+    }
+
+    return request(process.platform == 'darwin' ? 'Metal' : 'Vulkan');
 };
 
 
@@ -77,8 +114,8 @@ const errorTypes = {
 
 export function addGPUErrorHandler(adapter: GPUAdapter) {
     (adapter as any).handleUncapturedError = (devicePtr: Pointer, errType: number, msgPtr: Pointer, msgSize: BigInt, ud1: any, ud2: any) => {
+        const typeText = errorTypes[errType as keyof typeof errorTypes];
         let message = '[empty message]';
-        let typeText = errorTypes[errType as keyof typeof errorTypes];
 
         if (msgPtr) {
             if (process.platform == 'win32') {

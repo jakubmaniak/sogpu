@@ -25,7 +25,22 @@ export declare enum GPUShaderStage {
     COMPUTE = 4
 }
 export type GPUBufferSource = Float32Array<ArrayBufferLike> | Uint32Array<ArrayBufferLike> | Uint16Array<ArrayBufferLike>;
-type GPU = ReturnType<typeof createGPUInstance>;
+type GPU = {
+    requestAdapter(options?: GPUAdapterRequestOptions): Promise<GPUAdapter | null>;
+} & ReturnType<typeof createGPUInstance>;
+type GPUAdapterRequestOptions = GPURequestAdapterOptions & {
+    /**
+     * Used on **Windows** to select the preffered WebGPU backend.
+     * Ignored on other platforms.
+     *
+     * - `"dx12"` - use DirectX 12 if available; otherwise, fall back to DirectX 11, then Vulkan.
+     * - `"dx11"` - use DirectX 11 if available; otherwise, Vulkan.
+     * - `"vulkan"` - use Vulkan if available; otherwise, DirectX 11.
+     *
+     * Default: `"vulkan"`.
+    */
+    preferBackend?: 'dx12' | 'dx11' | 'vulkan';
+};
 export declare const gpu: GPU;
 export declare function extendDevice<T>(device: GPUDevice, props: T): GPUDevice & T;
 export declare function createMappedBuffer<T extends GPUBufferSource>(device: GPUDevice, data: T, usage: number): GPUBuffer;

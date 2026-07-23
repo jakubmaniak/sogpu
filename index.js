@@ -31,12 +31,29 @@ var GPUShaderStage;
   GPUShaderStage2[GPUShaderStage2["COMPUTE"] = 4] = "COMPUTE";
 })(GPUShaderStage ||= {});
 var gpu = createGPUInstance();
-var requestAdapterFn = gpu.requestAdapter;
-gpu.requestAdapter = function(options) {
-  return requestAdapterFn.call(gpu, {
-    ...options,
-    backendType: process.platform == "darwin" ? "Metal" : "Vulkan"
-  });
+var requestAdapterFn = gpu.requestAdapter.bind(gpu);
+gpu.requestAdapter = async function(options) {
+  function request(backendType) {
+    return requestAdapterFn({
+      ...options,
+      backendType
+    });
+  }
+  if (process.platform == "win32") {
+    const preferred = options?.preferBackend ?? "vulkan";
+    const backendCandidates = {
+      dx11: ["D3D11", "Vulkan"],
+      dx12: ["D3D12", "D3D11", "Vulkan"],
+      vulkan: ["Vulkan", "D3D11"]
+    }[preferred] ?? ["Vulkan", "D3D11"];
+    for (const backendType of backendCandidates) {
+      const adapter = await request(backendType).catch(() => null);
+      if (adapter)
+        return adapter;
+    }
+    return null;
+  }
+  return request(process.platform == "darwin" ? "Metal" : "Vulkan");
 };
 function extendDevice(device, props) {
   return Object.assign(device, props);
@@ -60,8 +77,8 @@ var errorTypes = {
 };
 function addGPUErrorHandler(adapter) {
   adapter.handleUncapturedError = (devicePtr, errType, msgPtr, msgSize, ud1, ud2) => {
+    const typeText = errorTypes[errType];
     let message = "[empty message]";
-    let typeText = errorTypes[errType];
     if (msgPtr) {
       if (process.platform == "win32") {
         const stringView = toArrayBuffer(msgPtr, 0, 16);
@@ -476,7 +493,7 @@ function configureSurface(lib, surface, config) {
     throw new Error("Invalid or unknown surface format");
   }
   const format = formatDict[formatKey];
-  const usage = config.usage ?? 16 /* RENDER_ATTACHMENT */;
+  const usage = config.usage ?? 16;
   const alphaMode = config.alphaMode == "premultiplied" ? 2 : 1;
   const presentMode = config.vsync ?? true ? 1 : 3;
   const buffer = new Uint8Array(64);
