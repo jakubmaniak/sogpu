@@ -2,6 +2,7 @@ import { type Pointer } from 'bun:ffi';
 import { SurfaceContext } from './surface.js';
 export declare class WindowInstance {
     readonly ptr: Pointer;
+    private ctx?;
     constructor(width: number, height: number, title: string);
     private create;
     getContext(): SurfaceContext;

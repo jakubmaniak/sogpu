@@ -552,6 +552,7 @@ class SurfaceContext {
   size;
   currentTexture = null;
   currentTextureView = null;
+  canvas;
   constructor(gpu2, glfw2, window) {
     this.glfw = glfw2;
     if (!("lib" in gpu2)) {
@@ -637,6 +638,7 @@ var glfw2 = new GLFWAdapter;
 
 class WindowInstance {
   ptr;
+  ctx;
   constructor(width, height, title) {
     this.ptr = this.create(width, height, title);
   }
@@ -644,7 +646,10 @@ class WindowInstance {
     return glfw2.createWindow(width, height, title);
   }
   getContext() {
-    return new SurfaceContext(gpu, glfw2, this.ptr);
+    if (!this.ctx) {
+      this.ctx = new SurfaceContext(gpu, glfw2, this.ptr);
+    }
+    return this.ctx;
   }
   destroy() {
     glfw2.destroyWindow(this.ptr);
@@ -704,10 +709,232 @@ class WindowInstance {
     return glfw2.getMousePosition(this.ptr);
   }
 }
+// src/browser/dom/node.ts
+class Node {
+  static ELEMENT_NODE = 1;
+  static TEXT_NODE = 3;
+  static DOCUMENT_NODE = 9;
+  ownerDocument;
+  nodeType = Node.ELEMENT_NODE;
+  nodeName = "";
+  listeners = new Map;
+  constructor(document) {
+    this.ownerDocument = document;
+  }
+  getRootNode() {
+    return this.ownerDocument;
+  }
+  addEventListener(type, listener) {
+    let pool = this.listeners.get(type);
+    if (!pool) {
+      pool = new Set;
+      this.listeners.set(type, pool);
+    }
+    pool.add(listener);
+    console.log("+", this.nodeName, type);
+  }
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+    console.log("-", this.nodeName, type, listener);
+  }
+  dispatchEvent(type, event) {
+    event.target = this;
+    this.listeners.get(type)?.forEach((cb) => cb(event));
+  }
+  appendChild(child) {
+    return child;
+  }
+}
+
+// src/browser/dom/element.ts
+class HTMLElement extends Node {
+  tagName;
+  style = { display: "block" };
+  constructor(document, name) {
+    super(document);
+    this.ownerDocument = document;
+    this.tagName = name.toUpperCase();
+    this.nodeName = this.tagName;
+  }
+  get offsetWidth() {
+    return 1;
+  }
+  get offsetHeight() {
+    return 1;
+  }
+  get offsetTop() {
+    return 0;
+  }
+  get offsetLeft() {
+    return 0;
+  }
+  get clientWidth() {
+    return 1;
+  }
+  get clientHeight() {
+    return 1;
+  }
+  setPointerCapture(pointerId) {}
+  releasePointerCapture(pointerId) {}
+}
+
+// src/browser/canvas-element.ts
+class HTMLCanvasElement extends HTMLElement {
+  window;
+  constructor(document, window) {
+    super(document, "canvas");
+    this.window = window;
+    window.ctx.canvas = this;
+  }
+  getContext() {
+    return this.window.getContext();
+  }
+  get width() {
+    return this.window.getSize().width;
+  }
+  get height() {
+    return this.window.getSize().height;
+  }
+  set width(value) {
+    this.window.setSize(value, this.height);
+  }
+  set height(value) {
+    this.window.setSize(this.width, value);
+  }
+  get offsetWidth() {
+    return this.width;
+  }
+  get offsetHeight() {
+    return this.height;
+  }
+  get clientWidth() {
+    return this.width;
+  }
+  get clientHeight() {
+    return this.height;
+  }
+}
+
+// src/browser/dom/document.ts
+class Document extends Node {
+  _window;
+  nodeType = 9;
+  nodeName = "#document";
+  constructor(window) {
+    super(null);
+    this.ownerDocument = this;
+    this._window = window;
+  }
+  createElement(name) {
+    if (name?.toLowerCase() == "canvas") {
+      return new HTMLCanvasElement(this, this._window);
+    } else {
+      console.log("Created", name, "element");
+      return new HTMLElement(this, name);
+    }
+  }
+  createElementNS(ns, name) {
+    return this.createElement(name);
+  }
+}
+
+// src/browser/event-emitter.ts
+class WindowEventEmitter {
+  window;
+  document;
+  state = {
+    x: 0,
+    y: 0,
+    lmb: false,
+    rmb: false
+  };
+  constructor(window, document) {
+    this.window = window;
+    this.document = document;
+    setInterval(() => this.tick(), 16);
+  }
+  tick() {
+    const mouse = this.window.getMousePosition();
+    const lmb = this.window.isMouseButtonPressed(0);
+    const rmb = this.window.isMouseButtonPressed(1);
+    if (lmb != this.state.lmb) {
+      this.state.lmb = lmb;
+      this.emitPointerUpDown(true, lmb);
+    }
+    if (rmb != this.state.rmb) {
+      this.state.rmb = rmb;
+      this.emitPointerUpDown(false, rmb);
+    }
+    if (mouse.x != this.state.x || mouse.y != this.state.y) {
+      this.emitPointerMove(mouse.x, mouse.y);
+      this.state.x = mouse.x;
+      this.state.y = mouse.y;
+    }
+  }
+  emitPointerUpDown(left, pressed) {
+    const type = pressed ? "pointerdown" : "pointerup";
+    const { x, y } = this.state;
+    const ev = {
+      type,
+      pointerId: 1,
+      pointerType: "mouse",
+      which: left ? 1 : 3,
+      button: left ? 0 : 2,
+      buttons: left ? 1 : 2,
+      x,
+      y,
+      clientX: x,
+      clientY: y,
+      pageX: x,
+      pageY: y,
+      movementX: 0,
+      movementY: 0
+    };
+    this.document.dispatchEvent(type, ev);
+    this.window.getContext().canvas?.dispatchEvent(type, ev);
+  }
+  emitPointerMove(x, y) {
+    const ev = {
+      type: "pointermove",
+      pointerId: 1,
+      pointerType: "mouse",
+      which: 0,
+      button: -1,
+      buttons: 0,
+      x,
+      y,
+      clientX: x,
+      clientY: y,
+      pageX: x,
+      pageY: y,
+      movementX: x - this.state.x,
+      movementY: y - this.state.y
+    };
+    this.document.dispatchEvent("pointermove", ev);
+  }
+}
+
+// src/browser/browser.ts
+function attachDOM(window, fps) {
+  global.navigator = { ...navigator, gpu };
+  global.GPUTextureUsage = GPUTextureUsage;
+  global.GPUBufferUsage = GPUBufferUsage;
+  global.GPUShaderStage = GPUShaderStage;
+  global.requestAnimationFrame = function(cb) {
+    setTimeout(cb, 1000 / fps);
+  };
+  global.document = new Document(window);
+  global.Document = Document;
+  global.Node = Node;
+  global.HTMLElement = HTMLElement;
+  global.HTMLCanvasElement = HTMLCanvasElement;
+  new WindowEventEmitter(window, global.document);
+}
 export {
   gpu,
   extendDevice,
   createMappedBuffer,
+  attachDOM,
   addGPUErrorHandler,
   WindowInstance,
   GPUTextureUsage,

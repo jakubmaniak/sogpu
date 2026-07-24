@@ -2,6 +2,7 @@ import { dlopen, ptr, type Pointer } from 'bun:ffi';
 import { type GLFWAdapter } from './glfw/adapter.js';
 import { gpu, GPUTextureUsage, type Extent2D } from './gpu.js';
 import { getPlatformType, resolveLibPath } from './platform.js';
+import type { HTMLCanvasElement } from './browser/canvas-element.js';
 
 
 type WindowHandles = {
@@ -185,6 +186,8 @@ export class SurfaceContext {
     private size?: Extent2D;
     private currentTexture: bigint | null = null;
     private currentTextureView: Pointer | null = null;
+
+    readonly canvas?: HTMLCanvasElement;
 
     constructor(gpu: GPU, private glfw: GLFWAdapter, window: Pointer) {
         if (!('lib' in gpu)) {

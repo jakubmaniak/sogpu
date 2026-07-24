@@ -1,4 +1,5 @@
 import { type Pointer } from 'bun:ffi';
+import type { HTMLCanvasElement } from './browser/canvas-element.js';
 import { GLFWAdapter } from './glfw/adapter.js';
 import { gpu } from './gpu.js';
 import { SurfaceContext } from './surface.js';
@@ -9,6 +10,7 @@ const glfw = new GLFWAdapter();
 
 export class WindowInstance {
     readonly ptr: Pointer;
+    private ctx?: SurfaceContext;
 
     constructor(width: number, height: number, title: string) {
         this.ptr = this.create(width, height, title);
@@ -19,7 +21,10 @@ export class WindowInstance {
     }
 
     getContext() {
-        return new SurfaceContext(gpu, glfw, this.ptr);
+        if (!this.ctx) {
+            this.ctx = new SurfaceContext(gpu, glfw, this.ptr);
+        }
+        return this.ctx;
     }
 
     destroy() {
