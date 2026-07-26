@@ -1,5 +1,6 @@
 import { createGPUInstance } from 'bun-webgpu';
 import { toArrayBuffer, type Pointer } from 'bun:ffi';
+import { toExternalSource, type GPUExternalDataSource } from './external-source.js';
 
 
 export enum GPUBufferUsage {
@@ -125,27 +126,27 @@ function wrapQueue(device: GPUDevice) {
     }
 
     function copyExternalImageToTexture(src: GPUCopyExternalImageSourceInfo, dst: GPUCopyExternalImageDestInfo, size: GPUExtent3DStrict): undefined {
-        const source = src.source;
+        if (!(toExternalSource in src.source)) {
+            throw new Error('copyExternalImageToTexture: Unsupported source.');
+        }
 
-        if (source.tagName == 'IMG') {
-            device.queue.writeTexture(
-                {
-                    texture: dst.texture,
-                    origin: dst.origin,
-                    mipLevel: dst.mipLevel,
-                    aspect: dst.aspect
-                },
-                source._dataBuffer,
-                {
-                    bytesPerRow: source.width * 4,
-                    rowsPerImage: source.height
-                },
-                size
-            );
-        }
-        else {
-            throw new Error('copyExternalImageToTexture: Unsupported source type. Expected an HTMLImageElement.');
-        }
+        const provider = src.source as GPUExternalDataSource;
+        const source = provider[toExternalSource]();
+
+        device.queue.writeTexture(
+            {
+                texture: dst.texture,
+                origin: dst.origin,
+                mipLevel: dst.mipLevel,
+                aspect: dst.aspect
+            },
+            source.data,
+            {
+                bytesPerRow: source.bytesPerRow,
+                rowsPerImage: source.rowsPerImage
+            },
+            size
+        );
     }
 
     queue.submit = submit.bind(queue);

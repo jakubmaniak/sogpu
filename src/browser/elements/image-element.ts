@@ -1,4 +1,5 @@
 import sharp from 'sharp';
+import { toExternalSource, type GPUExternalDataSource } from '../../external-source.js';
 import type { Document } from '../dom/document.js';
 import { HTMLElement } from '../dom/element.js';
 import type { EventListener } from '../dom/event-target.js';
@@ -9,7 +10,7 @@ function uint(n: number) {
 }
 
 
-export class HTMLImageElement extends HTMLElement {
+export class HTMLImageElement extends HTMLElement implements GPUExternalDataSource {
     private _src = '';
     private _width = 0;
     private _height = 0;
@@ -22,6 +23,14 @@ export class HTMLImageElement extends HTMLElement {
 
     constructor(document: Document) {
         super(document, 'img');
+    }
+
+    [toExternalSource]() {
+        return {
+            data: this._dataBuffer,
+            bytesPerRow: this.width * 4,
+            rowsPerImage: this.height
+        };
     }
 
     get src() {

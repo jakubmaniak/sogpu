@@ -2,6 +2,11 @@
 // src/gpu.ts
 import { createGPUInstance } from "bun-webgpu";
 import { toArrayBuffer } from "bun:ffi";
+
+// src/external-source.ts
+var toExternalSource = Symbol("toExternalSource");
+
+// src/gpu.ts
 var GPUBufferUsage;
 ((GPUBufferUsage2) => {
   GPUBufferUsage2[GPUBufferUsage2["MAP_READ"] = 1] = "MAP_READ";
@@ -80,20 +85,20 @@ function wrapQueue(device) {
     }
   }
   function copyExternalImageToTexture(src, dst, size) {
-    const source = src.source;
-    if (source.tagName == "IMG") {
-      device.queue.writeTexture({
-        texture: dst.texture,
-        origin: dst.origin,
-        mipLevel: dst.mipLevel,
-        aspect: dst.aspect
-      }, source._dataBuffer, {
-        bytesPerRow: source.width * 4,
-        rowsPerImage: source.height
-      }, size);
-    } else {
-      throw new Error("copyExternalImageToTexture: Unsupported source type. Expected an HTMLImageElement.");
+    if (!(toExternalSource in src.source)) {
+      throw new Error("copyExternalImageToTexture: Unsupported source.");
     }
+    const provider = src.source;
+    const source = provider[toExternalSource]();
+    device.queue.writeTexture({
+      texture: dst.texture,
+      origin: dst.origin,
+      mipLevel: dst.mipLevel,
+      aspect: dst.aspect
+    }, source.data, {
+      bytesPerRow: source.bytesPerRow,
+      rowsPerImage: source.rowsPerImage
+    }, size);
   }
   queue.submit = submit.bind(queue);
   queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
@@ -886,6 +891,13 @@ class HTMLImageElement extends HTMLElement {
   onerror = null;
   constructor(document) {
     super(document, "img");
+  }
+  [toExternalSource]() {
+    return {
+      data: this._dataBuffer,
+      bytesPerRow: this.width * 4,
+      rowsPerImage: this.height
+    };
   }
   get src() {
     return this._src;
