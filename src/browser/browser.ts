@@ -1,12 +1,12 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { gpu } from '../gpu.js';
 import type { WindowInstance } from '../window.js';
+import { Storage } from './apis/storage.js';
 import { Document } from './dom/document.js';
 import { HTMLElement } from './dom/element.js';
 import { EventTarget } from './dom/event-target.js';
 import { Node } from './dom/node.js';
 import { ProgressEvent } from './dom/progress-event.js';
-import { Storage } from './dom/storage.js';
 import { Window } from './dom/window.js';
 import { HTMLCanvasElement } from './elements/canvas-element.js';
 import { HTMLImageElement } from './elements/image-element.js';

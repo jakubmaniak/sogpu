@@ -745,6 +745,34 @@ class WindowInstance {
 // src/browser/browser.ts
 import { DOMParser } from "@xmldom/xmldom";
 
+// src/browser/apis/storage.ts
+class Storage {
+  length = 0;
+  getItem(key) {
+    return this[key] ?? null;
+  }
+  setItem(key, value) {
+    if (!(key in this)) {
+      this.length++;
+    }
+    this[key] = String(value);
+  }
+  removeItem(key) {
+    this[key] = undefined;
+  }
+  key(index) {
+    return Object.keys(this)[index] ?? null;
+  }
+  clear() {
+    const owned = ["length", "getItem", "setItem", "removeItem", "key", "clear"];
+    for (const key of Object.keys(this)) {
+      if (owned.includes(key))
+        continue;
+      this[key] = undefined;
+    }
+  }
+}
+
 // src/browser/dom/event-target.ts
 class EventTarget {
   _listeners = new Map;
@@ -981,34 +1009,6 @@ class ProgressEvent extends Event {
     this.lengthComputable = initDict.lengthComputable ?? false;
     this.loaded = initDict.loaded ?? 0;
     this.total = initDict.total ?? 0;
-  }
-}
-
-// src/browser/dom/storage.ts
-class Storage {
-  length = 0;
-  getItem(key) {
-    return this[key] ?? null;
-  }
-  setItem(key, value) {
-    if (!(key in this)) {
-      this.length++;
-    }
-    this[key] = String(value);
-  }
-  removeItem(key) {
-    this[key] = undefined;
-  }
-  key(index) {
-    return Object.keys(this)[index] ?? null;
-  }
-  clear() {
-    const owned = ["length", "getItem", "setItem", "removeItem", "key", "clear"];
-    for (const key of Object.keys(this)) {
-      if (owned.includes(key))
-        continue;
-      this[key] = undefined;
-    }
   }
 }
 
