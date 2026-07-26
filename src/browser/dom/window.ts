@@ -1,3 +1,4 @@
+import { createImageBitmap } from '../apis/image-bitmap.js';
 import type { Document } from './document.js';
 import { EventTarget, type EventListener } from './event-target.js';
 
@@ -36,5 +37,9 @@ export class Window extends EventTarget {
 
     requestAnimationFrame(cb: (time: number) => number) {
         setTimeout(() => cb(performance.now()), 1000 / this.fps);
+    }
+
+    createImageBitmap(...args: any[]) {
+        return createImageBitmap.apply(this, args as any);
     }
 }

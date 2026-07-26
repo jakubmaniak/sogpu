@@ -10,4 +10,5 @@ export declare class Window extends EventTarget {
     get innerWidth(): number;
     get innerHeight(): number;
     requestAnimationFrame(cb: (time: number) => number): void;
+    createImageBitmap(...args: any[]): Promise<import("../apis/image-bitmap.js").ImageBitmap>;
 }

@@ -861,32 +861,145 @@ class HTMLElement extends Node {
   }
 }
 
-// src/browser/elements/canvas-element.ts
-class HTMLCanvasElement extends HTMLElement {
-  _windowFrame;
-  constructor(document, frame) {
-    super(document, "canvas");
-    this._windowFrame = frame;
-    frame.ctx.canvas = this;
+// src/browser/elements/canvas/canvas-2d.ts
+import { createCanvas, Image } from "@napi-rs/canvas";
+
+// src/browser/apis/image-bitmap.ts
+import sharp from "sharp";
+async function createImageBitmap(image, ...args) {
+  const bitmap = new ImageBitmap;
+  if (image instanceof Blob) {
+    const img = image.image();
+    await img.metadata();
+    const res = await sharp(await img.buffer()).ensureAlpha().raw().toUint8Array();
+    bitmap._dataBuffer = res.data;
+    bitmap.width = img.width;
+    bitmap.height = img.height;
+  } else {
+    const src = image[toExternalSource]();
+    bitmap._dataBuffer = new Uint8Array(src.data);
+    bitmap.width = src.bytesPerRow / 4;
+    bitmap.height = src.rowsPerImage;
   }
-  getContext(type) {
-    if (type == "webgpu") {
-      return this._windowFrame.getContext();
-    }
-    console.error(`Canvas context type '${type}' is not supported.`);
-    return null;
+  return bitmap;
+}
+
+class ImageBitmap {
+  width = 0;
+  height = 0;
+  _dataBuffer = new Uint8Array;
+  close() {
+    this._dataBuffer = new Uint8Array;
+    this.width = 0;
+    this.height = 0;
+  }
+  [toExternalSource]() {
+    return {
+      data: this._dataBuffer,
+      bytesPerRow: this.width * 4,
+      rowsPerImage: this.height
+    };
+  }
+}
+
+// src/browser/elements/canvas/canvas-2d.ts
+class Canvas2D {
+  ctx;
+  canvas;
+  constructor(width, height) {
+    this.canvas = createCanvas(width, height);
+  }
+  getContext() {
+    const ctx = this.canvas.getContext("2d");
+    const drawImageFn = ctx.drawImage.bind(ctx);
+    const getImageDataFn = ctx.getImageData.bind(ctx);
+    ctx.drawImage = function(img, sx, sy, sw, sh, dx, dy, dw, dh) {
+      if (img instanceof ImageBitmap) {
+        const image = new Image(img.width, img.height);
+        image.src = img._dataBuffer;
+        img = image;
+      }
+      return drawImageFn(img, sx, sy, sw, sh, dx, dy, dw, dh);
+    };
+    ctx.getImageData = function(sx, sy, sw, sh, sett) {
+      const colorSpace = sett?.colorSpace == "srgb" ? "srgb" : undefined;
+      return getImageDataFn(sx, sy, sw, sh, colorSpace);
+    };
+    this.ctx = ctx;
+    return ctx;
+  }
+  get width() {
+    return this.canvas.width;
+  }
+  set width(value) {
+    this.canvas.width = value;
+  }
+  get height() {
+    return this.canvas.height;
+  }
+  set height(value) {
+    this.canvas.height = value;
+  }
+}
+
+// src/browser/elements/canvas/canvas-webgpu.ts
+class CanvasWebGPU {
+  _windowFrame;
+  ctx;
+  constructor(frame) {
+    this._windowFrame = frame;
+  }
+  getContext() {
+    this.ctx = this._windowFrame.getContext();
+    return this.ctx;
   }
   get width() {
     return this._windowFrame.getSize().width;
   }
-  get height() {
-    return this._windowFrame.getSize().height;
-  }
   set width(value) {
     this._windowFrame.setSize(value, this.height);
   }
+  get height() {
+    return this._windowFrame.getSize().height;
+  }
   set height(value) {
     this._windowFrame.setSize(this.width, value);
+  }
+}
+
+// src/browser/elements/canvas-element.ts
+class HTMLCanvasElement extends HTMLElement {
+  _windowFrame;
+  canvas;
+  constructor(document, frame) {
+    super(document, "canvas");
+    this._windowFrame = frame;
+  }
+  getContext(type) {
+    if (type == "webgpu") {
+      this.canvas = new CanvasWebGPU(this._windowFrame);
+      this._windowFrame.ctx.canvas = this;
+    } else if (type == "2d") {
+      this.canvas = new Canvas2D(100, 100);
+    } else {
+      console.error(`Canvas context type '${type}' is not supported.`);
+      return null;
+    }
+    return this.canvas?.getContext() ?? null;
+  }
+  get width() {
+    return this.canvas?.width ?? 0;
+  }
+  get height() {
+    return this.canvas?.height ?? 0;
+  }
+  set width(value) {
+    if (this.canvas)
+      this.canvas.width = value;
+  }
+  set height(value) {
+    if (this.canvas)
+      this.canvas.height = value;
   }
   get offsetWidth() {
     return this.width;
@@ -903,7 +1016,7 @@ class HTMLCanvasElement extends HTMLElement {
 }
 
 // src/browser/elements/image-element.ts
-import sharp from "sharp";
+import sharp2 from "sharp";
 function uint(n) {
   return Math.max(n, 0) | 0;
 }
@@ -933,7 +1046,7 @@ class HTMLImageElement extends HTMLElement {
   set src(value) {
     this.complete = false;
     this._src = value;
-    sharp(Bun.fileURLToPath(value)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
+    sharp2(Bun.fileURLToPath(value)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
       this._dataBuffer = res.data;
       this._width = res.info.width;
       this._height = res.info.height;
@@ -1039,6 +1152,9 @@ class Window extends EventTarget {
   requestAnimationFrame(cb) {
     setTimeout(() => cb(performance.now()), 1000 / this.fps);
   }
+  createImageBitmap(...args) {
+    return createImageBitmap.apply(this, args);
+  }
 }
 
 // src/browser/event-emitter.ts
@@ -1139,7 +1255,8 @@ function attachDOM(windowFrame, fps) {
     innerHeight: { get() {
       return window.innerHeight;
     } },
-    requestAnimationFrame: { value: window.requestAnimationFrame.bind(window) }
+    requestAnimationFrame: { value: window.requestAnimationFrame.bind(window) },
+    createImageBitmap: { value: window.createImageBitmap.bind(window) }
   });
   globalThis.Document = Document;
   globalThis.Window = Window;
@@ -1149,15 +1266,15 @@ function attachDOM(windowFrame, fps) {
   globalThis.HTMLCanvasElement = HTMLCanvasElement;
   globalThis.HTMLImageElement = HTMLImageElement;
 
-  class Image extends HTMLImageElement {
+  class Image2 extends HTMLImageElement {
     constructor(width, height) {
       super(globalThis.document);
       this.width = width ?? 0;
       this.height = height ?? 0;
     }
   }
-  globalThis.Image = Image;
-  globalThis.window.Image = Image;
+  globalThis.Image = Image2;
+  globalThis.window.Image = Image2;
   globalThis.ProgressEvent = ProgressEvent;
   globalThis.DOMParser = DOMParser;
   new WindowEventEmitter(windowFrame, document);

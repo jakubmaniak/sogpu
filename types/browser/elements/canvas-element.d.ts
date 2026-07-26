@@ -3,8 +3,9 @@ import type { Document } from '../dom/document.js';
 import { HTMLElement } from '../dom/element.js';
 export declare class HTMLCanvasElement extends HTMLElement {
     private _windowFrame;
+    private canvas?;
     constructor(document: Document, frame: WindowInstance);
-    getContext(type: string): import("../../surface.js").SurfaceContext | null;
+    getContext(type: string): any;
     get width(): number;
     get height(): number;
     set width(value: number);

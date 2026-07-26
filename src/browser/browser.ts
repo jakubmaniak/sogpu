@@ -30,6 +30,7 @@ export function attachDOM(windowFrame: WindowInstance, fps: number) {
         innerWidth: { get() { return window.innerWidth; } },
         innerHeight: { get() { return window.innerHeight; } },
         requestAnimationFrame: { value: window.requestAnimationFrame.bind(window) },
+        createImageBitmap: { value: window.createImageBitmap.bind(window) },
     });
 
     globalThis.Document = Document;
