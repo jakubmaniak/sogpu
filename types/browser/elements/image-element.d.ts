@@ -26,4 +26,5 @@ export declare class HTMLImageElement extends HTMLElement implements GPUExternal
     get naturalWidth(): number;
     get naturalHeight(): number;
     get currentSrc(): string;
+    private setImageContent;
 }

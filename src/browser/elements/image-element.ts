@@ -38,49 +38,20 @@ export class HTMLImageElement extends HTMLElement implements GPUExternalDataSour
     }
 
     set src(value: string) {
-        // console.log('src:', value);
-
-        this.complete = false;
-        this._src = value;
-
-        sharp(Bun.fileURLToPath(value))
-            .ensureAlpha()
-            .raw()
-            .toBuffer({ resolveWithObject: true })
-            .then((res) => {
-                this._dataBuffer = res.data;
-                this._width = res.info.width;
-                this._height = res.info.height;
-                this.complete = true;
-
-                this.dispatchEvent({ type: 'load' });
-                this.onload?.({ type: 'load', target: this });
-            })
-            .catch((err) => {
-                this.complete = true;
-
-                console.error(err);
-
-                this.dispatchEvent({ type: 'error' });
-                this.onerror?.({ type: 'error', target: this });
-            });
+        this.setImageContent(value);
     }
 
     get width() {
         return this._width;
     }
-
     set width(value: number) {
-        // console.log('width:', value);
         this._width = uint(value);
     }
 
     get height() {
         return this._height;
     }
-
     set height(value: number) {
-        // console.log('height:', value);
         this._height = uint(value);
     }
 
@@ -94,5 +65,42 @@ export class HTMLImageElement extends HTMLElement implements GPUExternalDataSour
 
     get currentSrc() {
         return this._src;
+    }
+
+    private async setImageContent(src: string) {
+        this.complete = false;
+        this._src = src;
+
+
+        let input: string | ArrayBuffer;
+
+        if (src.startsWith('blob:')) {
+            input = await fetch(src).then((res) => res.arrayBuffer());
+        }
+        else {
+            input = Bun.fileURLToPath(src);
+        }
+
+        sharp(input)
+            .ensureAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true })
+            .then((res) => {
+                this._dataBuffer = res.data;
+                this._width = res.info.width;
+                this._height = res.info.height;
+                this.complete = true;
+
+                this.dispatchEvent({ type: 'load' });
+                this.onload?.call(this, { type: 'load', target: this });
+            })
+            .catch((err) => {
+                this.complete = true;
+
+                console.error(err);
+
+                this.dispatchEvent({ type: 'error' });
+                this.onerror?.call(this, { type: 'error', target: this });
+            });
     }
 }

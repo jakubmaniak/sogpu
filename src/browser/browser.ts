@@ -54,6 +54,8 @@ export function attachDOM(windowFrame: WindowInstance, fps: number) {
     globalThis.ProgressEvent = ProgressEvent;
     globalThis.DOMParser = DOMParser;
 
+    globalThis.window.URL = URL;
+
 
     new WindowEventEmitter(windowFrame, document);
 

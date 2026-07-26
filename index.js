@@ -931,21 +931,7 @@ class HTMLImageElement extends HTMLElement {
     return this._src;
   }
   set src(value) {
-    this.complete = false;
-    this._src = value;
-    sharp(Bun.fileURLToPath(value)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
-      this._dataBuffer = res.data;
-      this._width = res.info.width;
-      this._height = res.info.height;
-      this.complete = true;
-      this.dispatchEvent({ type: "load" });
-      this.onload?.({ type: "load", target: this });
-    }).catch((err) => {
-      this.complete = true;
-      console.error(err);
-      this.dispatchEvent({ type: "error" });
-      this.onerror?.({ type: "error", target: this });
-    });
+    this.setImageContent(value);
   }
   get width() {
     return this._width;
@@ -967,6 +953,29 @@ class HTMLImageElement extends HTMLElement {
   }
   get currentSrc() {
     return this._src;
+  }
+  async setImageContent(src) {
+    this.complete = false;
+    this._src = src;
+    let input;
+    if (src.startsWith("blob:")) {
+      input = await fetch(src).then((res) => res.arrayBuffer());
+    } else {
+      input = Bun.fileURLToPath(src);
+    }
+    sharp(input).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
+      this._dataBuffer = res.data;
+      this._width = res.info.width;
+      this._height = res.info.height;
+      this.complete = true;
+      this.dispatchEvent({ type: "load" });
+      this.onload?.call(this, { type: "load", target: this });
+    }).catch((err) => {
+      this.complete = true;
+      console.error(err);
+      this.dispatchEvent({ type: "error" });
+      this.onerror?.call(this, { type: "error", target: this });
+    });
   }
 }
 
@@ -1160,6 +1169,7 @@ function attachDOM(windowFrame, fps) {
   globalThis.window.Image = Image;
   globalThis.ProgressEvent = ProgressEvent;
   globalThis.DOMParser = DOMParser;
+  globalThis.window.URL = URL;
   new WindowEventEmitter(windowFrame, document);
   globalThis.localStorage = new Storage;
   globalThis.sessionStorage = new Storage;

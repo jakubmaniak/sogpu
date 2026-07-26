@@ -10,7 +10,7 @@ if (!device) {
 }
 
 
-const win = new WindowInstance(1280, 720, 'SoGPU & Three.js');
+const win = new WindowInstance(1280, 720, 'SoGPU - Basic Three.js Example');
 const ctx = win.getContext();
 
 attachDOM(win, 60);
