@@ -7,7 +7,7 @@ import { SurfaceContext } from './surface.js';
 const glfw = new GLFWAdapter();
 
 
-export class WindowInstance {
+export class WindowFrame {
     readonly ptr: Pointer;
     private ctx?: SurfaceContext;
 

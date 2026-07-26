@@ -1,9 +1,9 @@
-import type { WindowInstance } from '../window.js';
+import type { WindowFrame } from '../window.js';
 import type { Document } from './dom/document.js';
 
 
 export class WindowEventEmitter {
-    windowFrame: WindowInstance;
+    windowFrame: WindowFrame;
     document: Document;
 
     private state = {
@@ -13,7 +13,7 @@ export class WindowEventEmitter {
         rmb: false
     };
 
-    constructor(windowFrame: WindowInstance, document: Document) {
+    constructor(windowFrame: WindowFrame, document: Document) {
         this.windowFrame = windowFrame;
         this.document = document;
 

@@ -1,9 +1,9 @@
-import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, WindowInstance, type GPUBufferSource } from '../src/index.js';
+import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, WindowFrame, type GPUBufferSource } from '../src/index.js';
 
 
 const adapterRequest = gpu.requestAdapter({ powerPreference: 'high-performance' });
 
-const win = new WindowInstance(1280, 720, 'SoGPU - Mouse Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - Mouse Example');
 win.setResizable(true);
 
 const adapter = await adapterRequest;

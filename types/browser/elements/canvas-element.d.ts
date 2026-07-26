@@ -1,9 +1,9 @@
-import type { WindowInstance } from '../../window.js';
+import type { WindowFrame } from '../../window.js';
 import type { Document } from '../dom/document.js';
 import { HTMLElement } from '../dom/element.js';
 export declare class HTMLCanvasElement extends HTMLElement {
     private _windowFrame;
-    constructor(document: Document, frame: WindowInstance);
+    constructor(document: Document, frame: WindowFrame);
     getContext(type: string): import("../../surface.js").SurfaceContext | null;
     get width(): number;
     get height(): number;

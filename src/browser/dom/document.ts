@@ -1,4 +1,4 @@
-import type { WindowInstance } from '../../window.js';
+import type { WindowFrame } from '../../window.js';
 import { HTMLCanvasElement } from '../elements/canvas-element.js';
 import { HTMLImageElement } from '../elements/image-element.js';
 import { HTMLElement } from './element.js';
@@ -6,7 +6,7 @@ import { Node } from './node.js';
 
 
 export class Document extends Node {
-    readonly _windowFrame: WindowInstance;
+    readonly _windowFrame: WindowFrame;
 
     override nodeType = 9;
     override nodeName = '#document';
@@ -14,7 +14,7 @@ export class Document extends Node {
     hidden = false;
     visibilityState = 'visible';
 
-    constructor(windowFrame: WindowInstance) {
+    constructor(windowFrame: WindowFrame) {
         super(null!);
         this.ownerDocument = this;
         this._windowFrame = windowFrame;

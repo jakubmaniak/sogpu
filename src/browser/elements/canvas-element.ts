@@ -1,12 +1,12 @@
-import type { WindowInstance } from '../../window.js';
+import type { WindowFrame } from '../../window.js';
 import type { Document } from '../dom/document.js';
 import { HTMLElement } from '../dom/element.js';
 
 
 export class HTMLCanvasElement extends HTMLElement {
-    private _windowFrame: WindowInstance;
+    private _windowFrame: WindowFrame;
 
-    constructor(document: Document, frame: WindowInstance) {
+    constructor(document: Document, frame: WindowFrame) {
         super(document, 'canvas');
         this._windowFrame = frame;
         (frame as any).ctx.canvas = this;

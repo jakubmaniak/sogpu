@@ -1,4 +1,4 @@
-import { addGPUErrorHandler, gpu, GPUBufferUsage, GPUShaderStage, GPUTextureUsage, WindowInstance } from '../src/index.js';
+import { addGPUErrorHandler, gpu, GPUBufferUsage, GPUShaderStage, GPUTextureUsage, WindowFrame } from '../src/index.js';
 
 
 const adapter = await gpu.requestAdapter({ powerPreference: 'high-performance' });
@@ -11,7 +11,7 @@ addGPUErrorHandler(adapter);
 const device = await adapter.requestDevice();
 
 
-const win = new WindowInstance(1280, 800, 'SoGPU - Cube Example');
+const win = new WindowFrame(1280, 800, 'SoGPU - Cube Example');
 win.setResizable(true);
 
 

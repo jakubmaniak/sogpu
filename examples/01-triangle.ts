@@ -1,5 +1,5 @@
-// import { gpu, WindowInstance } from 'sogpu';
-import { gpu, WindowInstance } from '../src/index.js';
+// import { gpu, WindowFrame } from 'sogpu';
+import { gpu, WindowFrame } from '../src/index.js';
 
 
 const adapter = await gpu.requestAdapter();
@@ -9,7 +9,7 @@ if (!adapter) {
 
 const device = await adapter.requestDevice();
 
-const win = new WindowInstance(1280, 720, 'SoGPU - Triangle Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - Triangle Example');
 
 const ctx = win.getContext();
 const preferredFormat = gpu.getPreferredCanvasFormat();

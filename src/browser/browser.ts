@@ -1,6 +1,6 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { gpu } from '../gpu.js';
-import type { WindowInstance } from '../window.js';
+import type { WindowFrame } from '../window.js';
 import { Storage } from './apis/storage.js';
 import { Document } from './dom/document.js';
 import { HTMLElement } from './dom/element.js';
@@ -16,7 +16,7 @@ import { WindowEventEmitter } from './event-emitter.js';
 declare const globalThis: any;
 
 
-export function attachDOM(windowFrame: WindowInstance, fps: number) {
+export function attachDOM(windowFrame: WindowFrame, fps: number) {
     globalThis.navigator = { ...navigator, gpu };
 
 

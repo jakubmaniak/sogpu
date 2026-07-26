@@ -1,2 +1,2 @@
-import type { WindowInstance } from '../window.js';
-export declare function attachDOM(windowFrame: WindowInstance, fps: number): void;
+import type { WindowFrame } from '../window.js';
+export declare function attachDOM(windowFrame: WindowFrame, fps: number): void;

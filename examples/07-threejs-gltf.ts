@@ -2,7 +2,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import * as THREE from 'three/webgpu';
-import { attachDOM, gpu, WindowInstance } from '../src/index.js';
+import { attachDOM, gpu, WindowFrame } from '../src/index.js';
 import { Window } from '../types/browser/dom/window.js';
 
 
@@ -13,7 +13,8 @@ if (!device) {
 }
 
 
-const win = new WindowInstance(1280, 720, 'SoGPU - Three.js glTF & HDRI Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - Three.js glTF & HDRI Example');
+win.setResizable(true);
 const context = win.getContext();
 
 setInterval(() => {
@@ -49,7 +50,7 @@ init().catch(function (err) {
 
 async function init() {
     renderer = new THREE.WebGPURenderer({ device, context, antialias: true });
-    renderer.setAnimationLoop(render );
+    renderer.setAnimationLoop(render);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -83,7 +84,7 @@ async function init() {
 
     // model
 
-    scene.add( gltf.scene );
+    scene.add(gltf.scene);
 
     render();
 

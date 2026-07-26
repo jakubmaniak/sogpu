@@ -1,10 +1,10 @@
-import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, GPUShaderStage, WindowInstance, type GPUBufferSource } from '../src/index.js';
+import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, GPUShaderStage, WindowFrame, type GPUBufferSource } from '../src/index.js';
 
 
 const adapterRequest = gpu.requestAdapter({ powerPreference: 'high-performance' });
 
 // let the user see the window immediately, while the adapter is being requested in the background
-const win = new WindowInstance(1280, 720, 'SoGPU - Advanced Triangle Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - Advanced Triangle Example');
 win.setResizable(true);
 
 const adapter = await adapterRequest;

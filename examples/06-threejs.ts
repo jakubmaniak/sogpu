@@ -1,6 +1,6 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three/webgpu';
-import { attachDOM, gpu, WindowInstance } from '../src/index.js';
+import { attachDOM, gpu, WindowFrame } from '../src/index.js';
 
 
 const adapter = await gpu.requestAdapter();
@@ -10,7 +10,7 @@ if (!device) {
 }
 
 
-const win = new WindowInstance(1280, 720, 'SoGPU - Basic Three.js Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - Basic Three.js Example');
 const ctx = win.getContext();
 
 attachDOM(win, 60);

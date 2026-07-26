@@ -1,4 +1,4 @@
-import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, WindowInstance, type GPUBufferSource } from '../src/index.js';
+import { addGPUErrorHandler, createMappedBuffer, extendDevice, gpu, GPUBufferUsage, WindowFrame, type GPUBufferSource } from '../src/index.js';
 
 
 const adapterRequest = gpu.requestAdapter({
@@ -6,7 +6,7 @@ const adapterRequest = gpu.requestAdapter({
     preferBackend: 'dx11' // HDR will not work with Vulkan on Windows
 });
 
-const win = new WindowInstance(1280, 720, 'SoGPU - HDR Example');
+const win = new WindowFrame(1280, 720, 'SoGPU - HDR Example');
 win.setResizable(true);
 
 const adapter = await adapterRequest;

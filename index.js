@@ -669,7 +669,7 @@ class SurfaceContext {
 // src/window.ts
 var glfw2 = new GLFWAdapter;
 
-class WindowInstance {
+class WindowFrame {
   ptr;
   ctx;
   constructor(width, height, title) {
@@ -1180,7 +1180,7 @@ export {
   createMappedBuffer,
   attachDOM,
   addGPUErrorHandler,
-  WindowInstance,
+  WindowFrame,
   GPUTextureUsage,
   GPUShaderStage,
   GPUBufferUsage
