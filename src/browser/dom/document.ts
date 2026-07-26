@@ -1,28 +1,35 @@
 import type { WindowInstance } from '../../window.js';
-import { HTMLCanvasElement } from '../canvas-element.js';
+import { HTMLCanvasElement } from '../elements/canvas-element.js';
+import { HTMLImageElement } from '../elements/image-element.js';
 import { HTMLElement } from './element.js';
 import { Node } from './node.js';
 
 
 export class Document extends Node {
-    private _window: WindowInstance;
+    readonly _windowFrame: WindowInstance;
 
     override nodeType = 9;
     override nodeName = '#document';
 
-    constructor(window: WindowInstance) {
+    hidden = false;
+    visibilityState = 'visible';
+
+    constructor(windowFrame: WindowInstance) {
         super(null!);
         this.ownerDocument = this;
-        this._window = window;
+        this._windowFrame = windowFrame;
     }
 
     createElement(name: string) {
-        if (name?.toLowerCase() == 'canvas') {
-            return new HTMLCanvasElement(this, this._window);
-        }
-        else {
-            console.log('Created', name, 'element');
-            return new HTMLElement(this, name);
+        const tagName = name.toLowerCase();
+        switch (tagName) {
+            case 'canvas':
+                return new HTMLCanvasElement(this, this._windowFrame);
+            case 'img':
+                return new HTMLImageElement(this);
+            default:
+                console.warn('Created fake', name, 'element');
+                return new HTMLElement(this, name);
         }
     }
 

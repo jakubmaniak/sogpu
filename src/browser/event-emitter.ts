@@ -3,7 +3,7 @@ import type { Document } from './dom/document.js';
 
 
 export class WindowEventEmitter {
-    window: WindowInstance;
+    windowFrame: WindowInstance;
     document: Document;
 
     private state = {
@@ -13,17 +13,17 @@ export class WindowEventEmitter {
         rmb: false
     };
 
-    constructor(window: WindowInstance, document: Document) {
-        this.window = window;
+    constructor(windowFrame: WindowInstance, document: Document) {
+        this.windowFrame = windowFrame;
         this.document = document;
 
         setInterval(() => this.tick(), 16);
     }
 
-    tick() {
-        const mouse = this.window.getMousePosition();
-        const lmb = this.window.isMouseButtonPressed(0);
-        const rmb = this.window.isMouseButtonPressed(1);
+    private tick() {
+        const mouse = this.windowFrame.getMousePosition();
+        const lmb = this.windowFrame.isMouseButtonPressed(0);
+        const rmb = this.windowFrame.isMouseButtonPressed(1);
 
         if (lmb != this.state.lmb) {
             this.state.lmb = lmb;
@@ -40,7 +40,7 @@ export class WindowEventEmitter {
         }
     }
 
-    emitPointerUpDown(left: boolean, pressed: boolean) {
+    private emitPointerUpDown(left: boolean, pressed: boolean) {
         const type = pressed ? 'pointerdown' : 'pointerup';
         const { x, y } = this.state;
         const ev = {
@@ -59,11 +59,11 @@ export class WindowEventEmitter {
             movementX: 0,
             movementY: 0
         };
-        this.document.dispatchEvent(type, ev);
-        this.window.getContext().canvas?.dispatchEvent(type, ev);
+        this.document.dispatchEvent(ev);
+        this.windowFrame.getContext().canvas?.dispatchEvent(ev);
     }
 
-    emitPointerMove(x: number, y: number) {
+    private emitPointerMove(x: number, y: number) {
         const ev = {
             type: 'pointermove',
             pointerId: 1,
@@ -80,6 +80,7 @@ export class WindowEventEmitter {
             movementX: x - this.state.x,
             movementY: y - this.state.y
         };
-        this.document.dispatchEvent('pointermove', ev);
+        this.document.dispatchEvent(ev);
+        this.windowFrame.getContext().canvas?.dispatchEvent(ev);
     }
 }

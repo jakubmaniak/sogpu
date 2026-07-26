@@ -1,19 +1,20 @@
 import type { Document } from './document.js';
+import { EventTarget, type EventListener } from './event-target.js';
 
 
-export class Node {
-    static ELEMENT_NODE = 1;
-    static TEXT_NODE = 3;
-    static DOCUMENT_NODE = 9;
+export class Node extends EventTarget {
+    static readonly ELEMENT_NODE = 1;
+    static readonly TEXT_NODE = 3;
+    static readonly DOCUMENT_NODE = 9;
 
 
     ownerDocument: Document;
     nodeType = Node.ELEMENT_NODE;
     nodeName = '';
 
-    private listeners = new Map<string, Set<(ev: any) => any>>();
 
     constructor(document: Document) {
+        super();
         this.ownerDocument = document;
     }
 
@@ -21,30 +22,18 @@ export class Node {
         return this.ownerDocument;
     }
 
-    addEventListener(type: string, listener: any) {
-        let pool = this.listeners.get(type);
-        if (!pool) {
-            pool = new Set();
-            this.listeners.set(type, pool);
-        }
+    // override addEventListener(type: string, listener: EventListener) {
+    //     super.addEventListener(type, listener);
+    //     console.log('+', this.nodeName, type);
+    // }
 
-        pool.add(listener);
-
-        console.log('+', this.nodeName, type);
-    }
-
-    removeEventListener(type: string, listener: any) {
-        this.listeners.get(type)?.delete(listener);
-
-        console.log('-', this.nodeName, type, listener);
-    }
-
-    dispatchEvent(type: string, event: any) {
-        event.target = this;
-        this.listeners.get(type)?.forEach((cb) => cb(event));
-    }
+    // override removeEventListener(type: string, listener: EventListener) {
+    //     super.removeEventListener(type, listener);
+    //     console.log('-', this.nodeName, type);
+    // }
 
     appendChild(child: Node) {
+        console.warn('Node.appendChild is not implemented');
         return child;
     }
 }

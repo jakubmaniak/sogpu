@@ -63,11 +63,14 @@ export const gpu: GPU = createGPUInstance();
 const requestAdapterFn = gpu.requestAdapter.bind(gpu);
 
 gpu.requestAdapter = async function(options?: GPUAdapterRequestOptions) {
-    function request(backendType: string) {
-        return requestAdapterFn({
+    async function request(backendType: string) {
+        const adapter = await requestAdapterFn({
             ...options,
             backendType,
         } satisfies GPUAdapterRequestOptions & { backendType: string } as any);
+
+        if (adapter) wrapAdapter(adapter);
+        return adapter;
     }
 
     if (process.platform == 'win32') {
@@ -88,6 +91,60 @@ gpu.requestAdapter = async function(options?: GPUAdapterRequestOptions) {
 
     return request(process.platform == 'darwin' ? 'Metal' : 'Vulkan');
 };
+
+
+function wrapAdapter(adapter: GPUAdapter) {
+    const requestDeviceFn = adapter.requestDevice.bind(adapter);
+
+    adapter.requestDevice = async function(desc) {
+        const device = await requestDeviceFn(desc);
+
+        if (device) wrapQueue(device);
+        return device;
+    };
+}
+
+
+function wrapQueue(device: GPUDevice) {
+    const queue = device.queue;
+    const submitFn = queue.submit.bind(queue);
+
+    function submit(commandBuffers: Iterable<GPUCommandBuffer>): undefined {
+        submitFn(commandBuffers);
+
+        // prevents memory leak
+        // a command buffer is not reusable anyway
+        // https://gpuweb.github.io/gpuweb/#dom-gpuqueue-submit
+        for (const cmdBuf of commandBuffers) {
+            cmdBuf._destroy();
+        }
+    }
+
+    function copyExternalImageToTexture(src: GPUCopyExternalImageSourceInfo, dst: GPUCopyExternalImageDestInfo, size: GPUExtent3DStrict): undefined {
+        const source = src.source;
+
+        if (source.tagName == 'IMG') {
+            device.queue.writeTexture(
+                {
+                    texture: dst.texture,
+                    origin: dst.origin,
+                    mipLevel: dst.mipLevel,
+                    aspect: dst.aspect
+                },
+                source._dataBuffer,
+                {
+                    bytesPerRow: source.width * 4,
+                    rowsPerImage: source.height
+                },
+                size
+            );
+        }
+    }
+
+    queue.submit = submit.bind(queue);
+    queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
+}
+
 
 
 export function extendDevice<T>(device: GPUDevice, props: T) {

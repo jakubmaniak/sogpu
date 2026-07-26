@@ -1,32 +1,62 @@
 import { gpu, GPUBufferUsage, GPUShaderStage, GPUTextureUsage } from '../gpu.js';
 import type { WindowInstance } from '../window.js';
-import { HTMLCanvasElement } from './canvas-element.js';
 import { Document } from './dom/document.js';
 import { HTMLElement } from './dom/element.js';
+import { EventTarget } from './dom/event-target.js';
 import { Node } from './dom/node.js';
+import { Storage } from './dom/storage.js';
+import { Window } from './dom/window.js';
+import { HTMLCanvasElement } from './elements/canvas-element.js';
+import { HTMLImageElement } from './elements/image-element.js';
 import { WindowEventEmitter } from './event-emitter.js';
 
 
-declare const global: any;
+declare const globalThis: any;
 
 
-export function attachDOM(window: WindowInstance, fps: number) {
-    global.navigator = { ...navigator, gpu };
+export function attachDOM(windowFrame: WindowInstance, fps: number) {
+    globalThis.navigator = { ...navigator, gpu };
 
-    global.GPUTextureUsage = GPUTextureUsage;
-    global.GPUBufferUsage = GPUBufferUsage;
-    global.GPUShaderStage = GPUShaderStage;
+    globalThis.GPUTextureUsage = GPUTextureUsage;
+    globalThis.GPUBufferUsage = GPUBufferUsage;
+    globalThis.GPUShaderStage = GPUShaderStage;
 
-    global.requestAnimationFrame = function(cb: (time: number) => number) {
-        setTimeout(cb, 1000 / fps);
-    };
 
-    global.document = new Document(window);
+    const document = new Document(windowFrame);
+    const window = new Window(document, fps);
 
-    global.Document = Document;
-    global.Node = Node;
-    global.HTMLElement = HTMLElement;
-    global.HTMLCanvasElement = HTMLCanvasElement;
+    Object.defineProperties(globalThis, {
+        window: { get() { return window; }},
+        document: { get() { return window.document; }},
+        devicePixelRatio: { get() { return window.devicePixelRatio; }},
+        innerWidth: { get() { return window.innerWidth; } },
+        innerHeight: { get() { return window.innerHeight; } },
+        requestAnimationFrame: { value: window.requestAnimationFrame.bind(window) },
+    });
 
-    new WindowEventEmitter(window, global.document);
+    globalThis.Document = Document;
+    globalThis.Window = Window;
+    globalThis.EventTarget = EventTarget;
+    globalThis.Node = Node;
+    globalThis.HTMLElement = HTMLElement;
+
+    globalThis.HTMLCanvasElement = HTMLCanvasElement;
+    globalThis.HTMLImageElement = HTMLImageElement;
+
+    class Image extends HTMLImageElement {
+        constructor(width?: number, height?: number) {
+            super(globalThis.document);
+            this.width = width ?? 0;
+            this.height = height ?? 0;
+        }
+    }
+    globalThis.Image = Image;
+    globalThis.window.Image = Image;
+
+
+    new WindowEventEmitter(windowFrame, document);
+
+
+    globalThis.localStorage = new Storage();
+    globalThis.sessionStorage = new Storage();
 }

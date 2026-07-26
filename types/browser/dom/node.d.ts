@@ -1,16 +1,13 @@
 import type { Document } from './document.js';
-export declare class Node {
-    static ELEMENT_NODE: number;
-    static TEXT_NODE: number;
-    static DOCUMENT_NODE: number;
+import { EventTarget } from './event-target.js';
+export declare class Node extends EventTarget {
+    static readonly ELEMENT_NODE = 1;
+    static readonly TEXT_NODE = 3;
+    static readonly DOCUMENT_NODE = 9;
     ownerDocument: Document;
     nodeType: number;
     nodeName: string;
-    private listeners;
     constructor(document: Document);
     getRootNode(): Document;
-    addEventListener(type: string, listener: any): void;
-    removeEventListener(type: string, listener: any): void;
-    dispatchEvent(type: string, event: any): void;
     appendChild(child: Node): Node;
 }

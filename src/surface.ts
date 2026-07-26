@@ -1,8 +1,8 @@
 import { dlopen, ptr, type Pointer } from 'bun:ffi';
+import type { HTMLCanvasElement } from './browser/elements/canvas-element.js';
 import { type GLFWAdapter } from './glfw/adapter.js';
 import { gpu, GPUTextureUsage, type Extent2D } from './gpu.js';
 import { getPlatformType, resolveLibPath } from './platform.js';
-import type { HTMLCanvasElement } from './browser/canvas-element.js';
 
 
 type WindowHandles = {
@@ -223,8 +223,6 @@ export class SurfaceContext {
         configureSurface(this._lib, this.surface, config, size);
         this.config = { ...config };
 
-        this.wrapQueueSubmit(config.device);
-
         if (!this._textureCtr) {
             const tex = config.device.createTexture({
                 size: [1, 1],
@@ -233,27 +231,6 @@ export class SurfaceContext {
             });
             this._textureCtr = (tex as any).__proto__.constructor;
         }
-    }
-
-    private wrapQueueSubmit(device: GPUDevice) {
-        if ((device.queue.submit as any).__wrapped__) return;
-
-        const queue = device.queue;
-        const submitFn = queue.submit.bind(queue);
-
-        function submit(commandBuffers: Iterable<GPUCommandBuffer>): undefined {
-            submitFn(commandBuffers);
-
-            // prevents memory leak
-            // a command buffer is not reusable anyway
-            // https://gpuweb.github.io/gpuweb/#dom-gpuqueue-submit
-            for (const cmdBuf of commandBuffers) {
-                cmdBuf._destroy();
-            }
-        }
-
-        queue.submit = submit.bind(queue);
-        (queue.submit as any).__wrapped__ = true;
     }
 
     getCurrentTextureView() {

@@ -2,6 +2,7 @@ import type { Document } from './document.js';
 import { Node } from './node.js';
 export declare class HTMLElement extends Node {
     tagName: string;
+    className: string;
     style: {
         display: string;
     };
@@ -14,4 +15,7 @@ export declare class HTMLElement extends Node {
     get clientHeight(): number;
     setPointerCapture(pointerId: number): void;
     releasePointerCapture(pointerId: number): void;
+    setAttribute(attr: string, value: any): void;
+    append(...nodes: (Node | string)[]): void;
+    querySelector(query: string): null;
 }

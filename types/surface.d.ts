@@ -1,7 +1,7 @@
 import { type Pointer } from 'bun:ffi';
+import type { HTMLCanvasElement } from './browser/elements/canvas-element.js';
 import { type GLFWAdapter } from './glfw/adapter.js';
 import { type Extent2D } from './gpu.js';
-import type { HTMLCanvasElement } from './browser/canvas-element.js';
 export type SurfaceConfiguration = {
     device: GPUDevice;
     size?: Extent2D;
@@ -28,7 +28,6 @@ export declare class SurfaceContext {
     readonly canvas?: HTMLCanvasElement;
     constructor(gpu: GPU, glfw: GLFWAdapter, window: Pointer);
     configure(config: SurfaceConfiguration): void;
-    private wrapQueueSubmit;
     getCurrentTextureView(): GPUTextureView;
     /**
      * @deprecated

@@ -33,11 +33,14 @@ var GPUShaderStage;
 var gpu = createGPUInstance();
 var requestAdapterFn = gpu.requestAdapter.bind(gpu);
 gpu.requestAdapter = async function(options) {
-  function request(backendType) {
-    return requestAdapterFn({
+  async function request(backendType) {
+    const adapter = await requestAdapterFn({
       ...options,
       backendType
     });
+    if (adapter)
+      wrapAdapter(adapter);
+    return adapter;
   }
   if (process.platform == "win32") {
     const preferred = options?.preferBackend ?? "vulkan";
@@ -55,6 +58,41 @@ gpu.requestAdapter = async function(options) {
   }
   return request(process.platform == "darwin" ? "Metal" : "Vulkan");
 };
+function wrapAdapter(adapter) {
+  const requestDeviceFn = adapter.requestDevice.bind(adapter);
+  adapter.requestDevice = async function(desc) {
+    const device = await requestDeviceFn(desc);
+    if (device)
+      wrapQueue(device);
+    return device;
+  };
+}
+function wrapQueue(device) {
+  const queue = device.queue;
+  const submitFn = queue.submit.bind(queue);
+  function submit(commandBuffers) {
+    submitFn(commandBuffers);
+    for (const cmdBuf of commandBuffers) {
+      cmdBuf._destroy();
+    }
+  }
+  function copyExternalImageToTexture(src, dst, size) {
+    const source = src.source;
+    if (source.tagName == "IMG") {
+      device.queue.writeTexture({
+        texture: dst.texture,
+        origin: dst.origin,
+        mipLevel: dst.mipLevel,
+        aspect: dst.aspect
+      }, source._dataBuffer, {
+        bytesPerRow: source.width * 4,
+        rowsPerImage: source.height
+      }, size);
+    }
+  }
+  queue.submit = submit.bind(queue);
+  queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
+}
 function extendDevice(device, props) {
   return Object.assign(device, props);
 }
@@ -576,7 +614,6 @@ class SurfaceContext {
     this.size = size;
     configureSurface(this._lib, this.surface, config, size);
     this.config = { ...config };
-    this.wrapQueueSubmit(config.device);
     if (!this._textureCtr) {
       const tex = config.device.createTexture({
         size: [1, 1],
@@ -585,20 +622,6 @@ class SurfaceContext {
       });
       this._textureCtr = tex.__proto__.constructor;
     }
-  }
-  wrapQueueSubmit(device) {
-    if (device.queue.submit.__wrapped__)
-      return;
-    const queue = device.queue;
-    const submitFn = queue.submit.bind(queue);
-    function submit(commandBuffers) {
-      submitFn(commandBuffers);
-      for (const cmdBuf of commandBuffers) {
-        cmdBuf._destroy();
-      }
-    }
-    queue.submit = submit.bind(queue);
-    queue.submit.__wrapped__ = true;
   }
   getCurrentTextureView() {
     if (!this.surface) {
@@ -709,39 +732,52 @@ class WindowInstance {
     return glfw2.getMousePosition(this.ptr);
   }
 }
+// src/browser/dom/event-target.ts
+class EventTarget {
+  _listeners = new Map;
+  addEventListener(type, listener) {
+    let pool = this._listeners.get(type);
+    if (!pool) {
+      pool = new Set;
+      this._listeners.set(type, pool);
+    }
+    pool.add(listener);
+  }
+  removeEventListener(type, listener) {
+    this._listeners.get(type)?.delete(listener);
+  }
+  dispatchEvent(type, event) {
+    if (typeof type != "string") {
+      event = type;
+      type = event.type;
+    }
+    event.type = type;
+    event.target ??= this;
+    event.currentTarget = this;
+    event.eventPhase = 2;
+    event.timeStamp = performance.now();
+    this._listeners.get(type)?.forEach((cb) => cb.call(this, event));
+    return true;
+  }
+}
+
 // src/browser/dom/node.ts
-class Node {
+class Node extends EventTarget {
   static ELEMENT_NODE = 1;
   static TEXT_NODE = 3;
   static DOCUMENT_NODE = 9;
   ownerDocument;
   nodeType = Node.ELEMENT_NODE;
   nodeName = "";
-  listeners = new Map;
   constructor(document) {
+    super();
     this.ownerDocument = document;
   }
   getRootNode() {
     return this.ownerDocument;
   }
-  addEventListener(type, listener) {
-    let pool = this.listeners.get(type);
-    if (!pool) {
-      pool = new Set;
-      this.listeners.set(type, pool);
-    }
-    pool.add(listener);
-    console.log("+", this.nodeName, type);
-  }
-  removeEventListener(type, listener) {
-    this.listeners.get(type)?.delete(listener);
-    console.log("-", this.nodeName, type, listener);
-  }
-  dispatchEvent(type, event) {
-    event.target = this;
-    this.listeners.get(type)?.forEach((cb) => cb(event));
-  }
   appendChild(child) {
+    console.warn("Node.appendChild is not implemented");
     return child;
   }
 }
@@ -749,6 +785,7 @@ class Node {
 // src/browser/dom/element.ts
 class HTMLElement extends Node {
   tagName;
+  className = "";
   style = { display: "block" };
   constructor(document, name) {
     super(document);
@@ -776,30 +813,44 @@ class HTMLElement extends Node {
   }
   setPointerCapture(pointerId) {}
   releasePointerCapture(pointerId) {}
+  setAttribute(attr, value) {
+    console.warn("HTMLElement.setAttribute is not implemented");
+  }
+  append(...nodes) {
+    console.warn("HTMLElement.append is not implemented");
+  }
+  querySelector(query) {
+    console.warn("HTMLElement.querySelector is not implemented");
+    return null;
+  }
 }
 
-// src/browser/canvas-element.ts
+// src/browser/elements/canvas-element.ts
 class HTMLCanvasElement extends HTMLElement {
-  window;
-  constructor(document, window) {
+  _windowFrame;
+  constructor(document, frame) {
     super(document, "canvas");
-    this.window = window;
-    window.ctx.canvas = this;
+    this._windowFrame = frame;
+    frame.ctx.canvas = this;
   }
-  getContext() {
-    return this.window.getContext();
+  getContext(type) {
+    if (type == "webgpu") {
+      return this._windowFrame.getContext();
+    }
+    console.error(`Canvas context type '${type}' is not supported.`);
+    return null;
   }
   get width() {
-    return this.window.getSize().width;
+    return this._windowFrame.getSize().width;
   }
   get height() {
-    return this.window.getSize().height;
+    return this._windowFrame.getSize().height;
   }
   set width(value) {
-    this.window.setSize(value, this.height);
+    this._windowFrame.setSize(value, this.height);
   }
   set height(value) {
-    this.window.setSize(this.width, value);
+    this._windowFrame.setSize(this.width, value);
   }
   get offsetWidth() {
     return this.width;
@@ -815,22 +866,89 @@ class HTMLCanvasElement extends HTMLElement {
   }
 }
 
+// src/browser/elements/image-element.ts
+import sharp from "sharp";
+function uint(n) {
+  return Math.max(n, 0) | 0;
+}
+
+class HTMLImageElement extends HTMLElement {
+  _src = "";
+  _width = 0;
+  _height = 0;
+  _dataBuffer = new Uint8Array(0);
+  crossorigin = "";
+  complete = true;
+  onload = null;
+  onerror = null;
+  constructor(document) {
+    super(document, "img");
+  }
+  get src() {
+    return this._src;
+  }
+  set src(value) {
+    this.complete = false;
+    this._src = value;
+    sharp(value).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
+      this._dataBuffer = res.data;
+      this._width = res.info.width;
+      this._height = res.info.height;
+      this.complete = true;
+      this.dispatchEvent({ type: "load" });
+      this.onload?.({ type: "load", target: this });
+    }).catch((err) => {
+      this.complete = true;
+      console.warn(err);
+      this.dispatchEvent({ type: "error" });
+      this.onerror?.({ type: "error", target: this });
+    });
+  }
+  get width() {
+    return this._width;
+  }
+  set width(value) {
+    this._width = uint(value);
+  }
+  get height() {
+    return this._height;
+  }
+  set height(value) {
+    this._height = uint(value);
+  }
+  get naturalWidth() {
+    return this._width;
+  }
+  get naturalHeight() {
+    return this._height;
+  }
+  get currentSrc() {
+    return this._src;
+  }
+}
+
 // src/browser/dom/document.ts
 class Document extends Node {
-  _window;
+  _windowFrame;
   nodeType = 9;
   nodeName = "#document";
-  constructor(window) {
+  hidden = false;
+  visibilityState = "visible";
+  constructor(windowFrame) {
     super(null);
     this.ownerDocument = this;
-    this._window = window;
+    this._windowFrame = windowFrame;
   }
   createElement(name) {
-    if (name?.toLowerCase() == "canvas") {
-      return new HTMLCanvasElement(this, this._window);
-    } else {
-      console.log("Created", name, "element");
-      return new HTMLElement(this, name);
+    const tagName = name.toLowerCase();
+    switch (tagName) {
+      case "canvas":
+        return new HTMLCanvasElement(this, this._windowFrame);
+      case "img":
+        return new HTMLImageElement(this);
+      default:
+        console.warn("Created fake", name, "element");
+        return new HTMLElement(this, name);
     }
   }
   createElementNS(ns, name) {
@@ -838,9 +956,66 @@ class Document extends Node {
   }
 }
 
+// src/browser/dom/storage.ts
+class Storage {
+  length = 0;
+  getItem(key) {
+    return this[key] ?? null;
+  }
+  setItem(key, value) {
+    if (!(key in this)) {
+      this.length++;
+    }
+    this[key] = String(value);
+  }
+  removeItem(key) {
+    this[key] = undefined;
+  }
+  key(index) {
+    return Object.keys(this)[index] ?? null;
+  }
+  clear() {
+    const owned = ["length", "getItem", "setItem", "removeItem", "key", "clear"];
+    for (const key of Object.keys(this)) {
+      if (owned.includes(key))
+        continue;
+      this[key] = undefined;
+    }
+  }
+}
+
+// src/browser/dom/window.ts
+class Window extends EventTarget {
+  document;
+  fps;
+  constructor(document, fps) {
+    super();
+    this.document = document;
+    this.fps = fps;
+  }
+  get window() {
+    return this;
+  }
+  get self() {
+    return this;
+  }
+  get devicePixelRatio() {
+    return 1;
+  }
+  get innerWidth() {
+    return this.document._windowFrame.getSize().width;
+  }
+  get innerHeight() {
+    return this.document._windowFrame.getSize().height;
+  }
+  requestAnimationFrame(cb) {
+    setTimeout(() => cb(performance.now()), 1000 / this.fps);
+  }
+}
+
 // src/browser/event-emitter.ts
 class WindowEventEmitter {
-  window;
+  windowFrame;
   document;
   state = {
     x: 0,
@@ -848,15 +1023,15 @@ class WindowEventEmitter {
     lmb: false,
     rmb: false
   };
-  constructor(window, document) {
-    this.window = window;
+  constructor(windowFrame, document) {
+    this.windowFrame = windowFrame;
     this.document = document;
     setInterval(() => this.tick(), 16);
   }
   tick() {
-    const mouse = this.window.getMousePosition();
-    const lmb = this.window.isMouseButtonPressed(0);
-    const rmb = this.window.isMouseButtonPressed(1);
+    const mouse = this.windowFrame.getMousePosition();
+    const lmb = this.windowFrame.isMouseButtonPressed(0);
+    const rmb = this.windowFrame.isMouseButtonPressed(1);
     if (lmb != this.state.lmb) {
       this.state.lmb = lmb;
       this.emitPointerUpDown(true, lmb);
@@ -890,8 +1065,8 @@ class WindowEventEmitter {
       movementX: 0,
       movementY: 0
     };
-    this.document.dispatchEvent(type, ev);
-    this.window.getContext().canvas?.dispatchEvent(type, ev);
+    this.document.dispatchEvent(ev);
+    this.windowFrame.getContext().canvas?.dispatchEvent(ev);
   }
   emitPointerMove(x, y) {
     const ev = {
@@ -910,25 +1085,57 @@ class WindowEventEmitter {
       movementX: x - this.state.x,
       movementY: y - this.state.y
     };
-    this.document.dispatchEvent("pointermove", ev);
+    this.document.dispatchEvent(ev);
+    this.windowFrame.getContext().canvas?.dispatchEvent(ev);
   }
 }
 
 // src/browser/browser.ts
-function attachDOM(window, fps) {
-  global.navigator = { ...navigator, gpu };
-  global.GPUTextureUsage = GPUTextureUsage;
-  global.GPUBufferUsage = GPUBufferUsage;
-  global.GPUShaderStage = GPUShaderStage;
-  global.requestAnimationFrame = function(cb) {
-    setTimeout(cb, 1000 / fps);
-  };
-  global.document = new Document(window);
-  global.Document = Document;
-  global.Node = Node;
-  global.HTMLElement = HTMLElement;
-  global.HTMLCanvasElement = HTMLCanvasElement;
-  new WindowEventEmitter(window, global.document);
+function attachDOM(windowFrame, fps) {
+  globalThis.navigator = { ...navigator, gpu };
+  globalThis.GPUTextureUsage = GPUTextureUsage;
+  globalThis.GPUBufferUsage = GPUBufferUsage;
+  globalThis.GPUShaderStage = GPUShaderStage;
+  const document = new Document(windowFrame);
+  const window = new Window(document, fps);
+  Object.defineProperties(globalThis, {
+    window: { get() {
+      return window;
+    } },
+    document: { get() {
+      return window.document;
+    } },
+    devicePixelRatio: { get() {
+      return window.devicePixelRatio;
+    } },
+    innerWidth: { get() {
+      return window.innerWidth;
+    } },
+    innerHeight: { get() {
+      return window.innerHeight;
+    } },
+    requestAnimationFrame: { value: window.requestAnimationFrame.bind(window) }
+  });
+  globalThis.Document = Document;
+  globalThis.Window = Window;
+  globalThis.EventTarget = EventTarget;
+  globalThis.Node = Node;
+  globalThis.HTMLElement = HTMLElement;
+  globalThis.HTMLCanvasElement = HTMLCanvasElement;
+  globalThis.HTMLImageElement = HTMLImageElement;
+
+  class Image extends HTMLImageElement {
+    constructor(width, height) {
+      super(globalThis.document);
+      this.width = width ?? 0;
+      this.height = height ?? 0;
+    }
+  }
+  globalThis.Image = Image;
+  globalThis.window.Image = Image;
+  new WindowEventEmitter(windowFrame, document);
+  globalThis.localStorage = new Storage;
+  globalThis.sessionStorage = new Storage;
 }
 export {
   gpu,

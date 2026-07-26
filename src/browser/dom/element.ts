@@ -4,6 +4,7 @@ import { Node } from './node.js';
 
 export class HTMLElement extends Node {
     tagName: string;
+    className = '';
     style = { display: 'block' };
 
     constructor(document: Document, name: string) {
@@ -22,4 +23,17 @@ export class HTMLElement extends Node {
 
     setPointerCapture(pointerId: number) { }
     releasePointerCapture(pointerId: number) { }
+
+    setAttribute(attr: string, value: any) {
+        console.warn('HTMLElement.setAttribute is not implemented');
+    }
+
+    append(...nodes: (Node | string)[]) {
+        console.warn('HTMLElement.append is not implemented');
+    }
+
+    querySelector(query: string) {
+        console.warn('HTMLElement.querySelector is not implemented');
+        return null;
+    }
 }

@@ -1,5 +1,4 @@
 import { type Pointer } from 'bun:ffi';
-import type { HTMLCanvasElement } from './browser/canvas-element.js';
 import { GLFWAdapter } from './glfw/adapter.js';
 import { gpu } from './gpu.js';
 import { SurfaceContext } from './surface.js';

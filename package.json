@@ -12,11 +12,11 @@
     "module": "./index.js",
     "types": "./types/index.d.ts",
     "exports": {
-      ".": {
-        "import": "./index.js",
-        "require": "./index.js",
-        "types": "./types/index.d.ts"
-      }
+        ".": {
+            "import": "./index.js",
+            "require": "./index.js",
+            "types": "./types/index.d.ts"
+        }
     },
     "scripts": {
         "build:lib": "bun build src/index.ts --outdir . --target=bun --packages external",
@@ -27,6 +27,7 @@
         "@types/bun": "^1.3.14"
     },
     "dependencies": {
-        "bun-webgpu": "^0.1.7"
+        "bun-webgpu": "^0.1.7",
+        "sharp": "^0.35.3"
     }
 }
