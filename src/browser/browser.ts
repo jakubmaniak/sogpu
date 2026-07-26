@@ -1,3 +1,4 @@
+import { DOMParser } from '@xmldom/xmldom';
 import { gpu } from '../gpu.js';
 import type { WindowInstance } from '../window.js';
 import { Document } from './dom/document.js';
@@ -51,6 +52,7 @@ export function attachDOM(windowFrame: WindowInstance, fps: number) {
     globalThis.window.Image = Image;
 
     globalThis.ProgressEvent = ProgressEvent;
+    globalThis.DOMParser = DOMParser;
 
 
     new WindowEventEmitter(windowFrame, document);

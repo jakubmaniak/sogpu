@@ -737,6 +737,9 @@ class WindowInstance {
     return glfw2.getMousePosition(this.ptr);
   }
 }
+// src/browser/browser.ts
+import { DOMParser } from "@xmldom/xmldom";
+
 // src/browser/dom/event-target.ts
 class EventTarget {
   _listeners = new Map;
@@ -1144,6 +1147,7 @@ function attachDOM(windowFrame, fps) {
   globalThis.Image = Image;
   globalThis.window.Image = Image;
   globalThis.ProgressEvent = ProgressEvent;
+  globalThis.DOMParser = DOMParser;
   new WindowEventEmitter(windowFrame, document);
   globalThis.localStorage = new Storage;
   globalThis.sessionStorage = new Storage;
