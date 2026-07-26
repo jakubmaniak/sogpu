@@ -6,19 +6,20 @@ import { attachDOM, gpu, WindowInstance } from '../src/index.js';
 const adapter = await gpu.requestAdapter();
 const device = await adapter?.requestDevice();
 if (!device) {
-    throw new Error('No adapter/device found');
+    throw new Error('No GPU adapter/device found');
 }
 
 
-const window = new WindowInstance(1280, 720, 'SoGPU & Three.js');
-const ctx = window.getContext();
+const win = new WindowInstance(1280, 720, 'SoGPU & Three.js');
+const ctx = win.getContext();
+
+attachDOM(win, 60);
+
 
 setInterval(() => {
-    window.pollEvents();
-    if (window.shouldClose()) process.exit(0);
+    win.pollEvents();
+    if (win.shouldClose()) process.exit(0);
 }, 16);
-
-attachDOM(window, 60);
 
 
 

@@ -34,7 +34,7 @@ export class HTMLImageElement extends HTMLElement {
         this.complete = false;
         this._src = value;
 
-        sharp(value)
+        sharp(Bun.fileURLToPath(value))
             .ensureAlpha()
             .raw()
             .toBuffer({ resolveWithObject: true })
@@ -50,7 +50,7 @@ export class HTMLImageElement extends HTMLElement {
             .catch((err) => {
                 this.complete = true;
 
-                console.warn(err);
+                console.error(err);
 
                 this.dispatchEvent({ type: 'error' });
                 this.onerror?.({ type: 'error', target: this });

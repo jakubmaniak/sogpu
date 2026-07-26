@@ -1,9 +1,10 @@
-import { gpu, GPUBufferUsage, GPUShaderStage, GPUTextureUsage } from '../gpu.js';
+import { gpu } from '../gpu.js';
 import type { WindowInstance } from '../window.js';
 import { Document } from './dom/document.js';
 import { HTMLElement } from './dom/element.js';
 import { EventTarget } from './dom/event-target.js';
 import { Node } from './dom/node.js';
+import { ProgressEvent } from './dom/progress-event.js';
 import { Storage } from './dom/storage.js';
 import { Window } from './dom/window.js';
 import { HTMLCanvasElement } from './elements/canvas-element.js';
@@ -16,10 +17,6 @@ declare const globalThis: any;
 
 export function attachDOM(windowFrame: WindowInstance, fps: number) {
     globalThis.navigator = { ...navigator, gpu };
-
-    globalThis.GPUTextureUsage = GPUTextureUsage;
-    globalThis.GPUBufferUsage = GPUBufferUsage;
-    globalThis.GPUShaderStage = GPUShaderStage;
 
 
     const document = new Document(windowFrame);
@@ -52,6 +49,8 @@ export function attachDOM(windowFrame: WindowInstance, fps: number) {
     }
     globalThis.Image = Image;
     globalThis.window.Image = Image;
+
+    globalThis.ProgressEvent = ProgressEvent;
 
 
     new WindowEventEmitter(windowFrame, document);

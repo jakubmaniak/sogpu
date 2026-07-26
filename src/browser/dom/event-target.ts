@@ -20,21 +20,13 @@ export class EventTarget {
         this._listeners.get(type)?.delete(listener);
     }
 
-    dispatchEvent(type: any): boolean;
-    dispatchEvent(type: string, event: any): boolean;
-    dispatchEvent(type: any, event?: any) {
-        if (typeof type != 'string') {
-            event = type;
-            type = event.type;
-        }
-
-        event.type = type;
+    dispatchEvent(event: { type: string } & Record<string, any>) {
         event.target ??= this;
         event.currentTarget = this;
         event.eventPhase = 2;
         event.timeStamp = performance.now();
 
-        this._listeners.get(type)?.forEach((cb) => cb.call(this, event));
+        this._listeners.get(event.type)?.forEach((cb) => cb.call(this, event));
 
         return true;
     }

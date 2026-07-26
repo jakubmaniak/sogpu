@@ -30,6 +30,9 @@ var GPUShaderStage;
   GPUShaderStage2[GPUShaderStage2["FRAGMENT"] = 2] = "FRAGMENT";
   GPUShaderStage2[GPUShaderStage2["COMPUTE"] = 4] = "COMPUTE";
 })(GPUShaderStage ||= {});
+globalThis.GPUTextureUsage = GPUTextureUsage;
+globalThis.GPUBufferUsage = GPUBufferUsage;
+globalThis.GPUShaderStage = GPUShaderStage;
 var gpu = createGPUInstance();
 var requestAdapterFn = gpu.requestAdapter.bind(gpu);
 gpu.requestAdapter = async function(options) {
@@ -88,6 +91,8 @@ function wrapQueue(device) {
         bytesPerRow: source.width * 4,
         rowsPerImage: source.height
       }, size);
+    } else {
+      throw new Error("copyExternalImageToTexture: Unsupported source type. Expected an HTMLImageElement.");
     }
   }
   queue.submit = submit.bind(queue);
@@ -746,17 +751,12 @@ class EventTarget {
   removeEventListener(type, listener) {
     this._listeners.get(type)?.delete(listener);
   }
-  dispatchEvent(type, event) {
-    if (typeof type != "string") {
-      event = type;
-      type = event.type;
-    }
-    event.type = type;
+  dispatchEvent(event) {
     event.target ??= this;
     event.currentTarget = this;
     event.eventPhase = 2;
     event.timeStamp = performance.now();
-    this._listeners.get(type)?.forEach((cb) => cb.call(this, event));
+    this._listeners.get(event.type)?.forEach((cb) => cb.call(this, event));
     return true;
   }
 }
@@ -890,7 +890,7 @@ class HTMLImageElement extends HTMLElement {
   set src(value) {
     this.complete = false;
     this._src = value;
-    sharp(value).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
+    sharp(Bun.fileURLToPath(value)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }).then((res) => {
       this._dataBuffer = res.data;
       this._width = res.info.width;
       this._height = res.info.height;
@@ -899,7 +899,7 @@ class HTMLImageElement extends HTMLElement {
       this.onload?.({ type: "load", target: this });
     }).catch((err) => {
       this.complete = true;
-      console.warn(err);
+      console.error(err);
       this.dispatchEvent({ type: "error" });
       this.onerror?.({ type: "error", target: this });
     });
@@ -953,6 +953,19 @@ class Document extends Node {
   }
   createElementNS(ns, name) {
     return this.createElement(name);
+  }
+}
+
+// src/browser/dom/progress-event.ts
+class ProgressEvent extends Event {
+  lengthComputable;
+  loaded;
+  total;
+  constructor(type, initDict) {
+    super(type, initDict);
+    this.lengthComputable = initDict.lengthComputable ?? false;
+    this.loaded = initDict.loaded ?? 0;
+    this.total = initDict.total ?? 0;
   }
 }
 
@@ -1093,9 +1106,6 @@ class WindowEventEmitter {
 // src/browser/browser.ts
 function attachDOM(windowFrame, fps) {
   globalThis.navigator = { ...navigator, gpu };
-  globalThis.GPUTextureUsage = GPUTextureUsage;
-  globalThis.GPUBufferUsage = GPUBufferUsage;
-  globalThis.GPUShaderStage = GPUShaderStage;
   const document = new Document(windowFrame);
   const window = new Window(document, fps);
   Object.defineProperties(globalThis, {
@@ -1133,6 +1143,7 @@ function attachDOM(windowFrame, fps) {
   }
   globalThis.Image = Image;
   globalThis.window.Image = Image;
+  globalThis.ProgressEvent = ProgressEvent;
   new WindowEventEmitter(windowFrame, document);
   globalThis.localStorage = new Storage;
   globalThis.sessionStorage = new Storage;

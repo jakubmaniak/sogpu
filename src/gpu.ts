@@ -30,6 +30,10 @@ export enum GPUShaderStage {
     COMPUTE = 4
 }
 
+globalThis.GPUTextureUsage = GPUTextureUsage;
+globalThis.GPUBufferUsage = GPUBufferUsage;
+globalThis.GPUShaderStage = GPUShaderStage;
+
 
 export type Extent2D = {
     width: number;
@@ -138,6 +142,9 @@ function wrapQueue(device: GPUDevice) {
                 },
                 size
             );
+        }
+        else {
+            throw new Error('copyExternalImageToTexture: Unsupported source type. Expected an HTMLImageElement.');
         }
     }
 
