@@ -35,7 +35,7 @@ export const keymap = new Map<number, KeyMapItem>([
     key(266, 'PageUp', 33),
     key(267, 'PageDown', 34),
     key(268, 'Home', 36),
-    key(267, 'End', 35),
+    key(269, 'End', 35),
     key(280, 'CapsLock', 20),
     key(281, 'ScrollLock', 145),
     key(282, 'NumLock', 144),
