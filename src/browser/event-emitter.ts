@@ -1,4 +1,4 @@
-import { keycodes, keymap } from '../glfw/adapter.js';
+import { keymap } from '../glfw/keymap.js';
 import type { WindowFrame } from '../window.js';
 import type { Document } from './dom/document.js';
 import type { Window } from './dom/window.js';
@@ -26,6 +26,8 @@ export class WindowEventEmitter {
         pressed: { } as Record<string, boolean>,
     };
 
+    private keyChars = getKeyCharacters();
+
     constructor(windowFrame: WindowFrame, domWindow: Window, document: Document) {
         this.frame = windowFrame;
         this.window = domWindow;
@@ -47,11 +49,10 @@ export class WindowEventEmitter {
             this.state.shift = !!(mods&1);
             this.state.meta = !!(mods&8);
 
-            const code = keymap.get(key);
-            if (code) {
-                this.state.pressed[code] = !!action;
-                const which = keycodes.get(key) ?? 0;
-                this.emitKeyUpDown(code, which, action);
+            const km = keymap.get(key);
+            if (km) {
+                this.state.pressed[km.label] = !!action;
+                this.emitKeyUpDown(km.label, km.code, km.location, action);
             }
         });
     }
@@ -144,43 +145,56 @@ export class WindowEventEmitter {
         this.canvas?.dispatchEvent(ev);
     }
 
-    private emitKeyUpDown(code: string, which: number, pressed: number) {
+    private emitKeyUpDown(label: string, code: number, location: number, pressed: number) {
         const type = pressed ? 'keydown' : 'keyup';
         const ev = {
             type,
-            code,
-            key: (
-                code.startsWith('Shift') ? 'Shift' :
-                code.startsWith('Control') ? 'Control' :
-                code.startsWith('Alt') ? 'Alt' :
-                code.startsWith('Meta') ? 'Meta' :
-                code.startsWith('Key') ? code.slice(3).toLowerCase() :
-                code.startsWith('Digit') ? code.slice(5).toLowerCase() :
-                code == 'Space' ? ' ' :
-                code
-            ),
-            which,
-            keyCode: which,
+            code: label,
+            key: this.keyChars.get(label) ?? label,
+            which: code,
+            keyCode: code,
             ctrlKey: this.state.ctrl,
             altKey: this.state.alt,
             shiftKey: this.state.shift,
             metaKey: this.state.meta,
-            location: this.getKeyLocation(code),
+            location,
             repeat: (pressed == 2),
         };
         this.window.dispatchEvent(ev);
         this.document.dispatchEvent(ev);
         this.canvas?.dispatchEvent(ev);
     }
+}
 
-    private getKeyLocation(code: string) {
-        if (code.startsWith('Numpad')) return 3;
 
-        const loc1 = ['ControlLeft', 'AltLeft', 'ShiftLeft', 'MetaLeft'];
-        const loc2 = ['ControlRight', 'AltRight', 'ShiftRight', 'MetaRight'];
-
-        if (loc1.includes(code)) return 1;
-        if (loc2.includes(code)) return 2;
-        return 0;
-    }
+function getKeyCharacters() {
+    return new Map<string, string>([
+        ['ControlLeft', 'Control'],
+        ['ControlRight', 'Control'],
+        ['AltLeft', 'Alt'],
+        ['AltRight', 'Alt'],
+        ['ShiftLeft', 'Shift'],
+        ['ShiftRight', 'Shift'],
+        ['MetaLeft', 'Meta'],
+        ['MetaRight', 'Meta'],
+        ...Array.from(
+            { length: 10 },
+            (_, i) => [`Digit${i}`, String(i)] as const
+        ),
+        ...Array.from(
+            { length: 26 },
+            (_, i) => [`Key${String.fromCharCode(65 + i)}`, String.fromCharCode(97 + i)] as const
+        ),
+        ['Space', ' '],
+        ['Quote', '\''],
+        ['Comma', ','],
+        ['Minus', '-'],
+        ['Period', '.'],
+        ['Slash', '/'],
+        ['Semicolon', ';'],
+        ['Equal', '='],
+        ['BracketLeft', '['],
+        ['BracketRight', ']'],
+        ['Backslash', '\\'],
+    ]);
 }

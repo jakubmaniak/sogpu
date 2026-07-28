@@ -641,110 +641,6 @@ class GLFWAdapter {
     };
   }
 }
-var keymap = new Map([
-  [32, "Space"],
-  [39, "Quote"],
-  [44, "Comma"],
-  [45, "Minus"],
-  [46, "Period"],
-  [47, "Slash"],
-  ...Array.from({ length: 10 }, (_, k) => [48 + k, `Digit${k}`]),
-  [59, "Semicolon"],
-  [61, "Equal"],
-  ...Array.from({ length: 26 }, (_, k) => [65 + k, `Key${String.fromCharCode(65 + k)}`]),
-  [91, "BracketLeft"],
-  [92, "Backslash"],
-  [93, "BracketRight"],
-  [96, "Backquote"],
-  [161, "IntlBackslash"],
-  [256, "Escape"],
-  [257, "Enter"],
-  [258, "Tab"],
-  [259, "Backspace"],
-  [260, "Insert"],
-  [261, "Delete"],
-  [262, "ArrowRight"],
-  [263, "ArrowLeft"],
-  [264, "ArrowDown"],
-  [265, "ArrowUp"],
-  [266, "PageUp"],
-  [267, "PageDown"],
-  [268, "Home"],
-  [267, "End"],
-  [280, "CapsLock"],
-  [281, "ScrollLock"],
-  [282, "NumLock"],
-  [283, "PrintScreen"],
-  ...Array.from({ length: 25 }, (_, k) => [290 + k, `F${k + 1}`]),
-  ...Array.from({ length: 10 }, (_, k) => [320 + k, `Numpad${k}`]),
-  [330, "NumpadDecimal"],
-  [331, "NumpadDivide"],
-  [332, "NumpadMultiply"],
-  [333, "NumpadSubtract"],
-  [334, "NumpadAdd"],
-  [335, "NumpadEnter"],
-  [340, "ShiftLeft"],
-  [341, "ControlLeft"],
-  [342, "AltLeft"],
-  [343, "MetaLeft"],
-  [344, "ShiftRight"],
-  [345, "ControlRight"],
-  [346, "AltRight"],
-  [347, "MetaRight"],
-  [348, "ContextMenu"]
-]);
-var keycodes = new Map([
-  [32, 32],
-  [39, 222],
-  [44, 188],
-  [45, 189],
-  [46, 190],
-  [47, 191],
-  ...Array.from({ length: 10 }, (_, k) => [48 + k, 48 + k]),
-  [59, 186],
-  [61, 187],
-  ...Array.from({ length: 26 }, (_, k) => [65 + k, 65 + k]),
-  [91, 219],
-  [92, 220],
-  [93, 221],
-  [96, 192],
-  [161, 192],
-  [256, 27],
-  [257, 13],
-  [258, 20],
-  [259, 8],
-  [260, 45],
-  [261, 46],
-  [262, 39],
-  [263, 37],
-  [264, 40],
-  [265, 38],
-  [266, 33],
-  [267, 34],
-  [268, 36],
-  [267, 35],
-  [280, 20],
-  [281, 145],
-  [282, 144],
-  [283, 44],
-  ...Array.from({ length: 25 }, (_, k) => [290 + k, 112 + k]),
-  ...Array.from({ length: 10 }, (_, k) => [320 + k, 96 + k]),
-  [330, 110],
-  [331, 111],
-  [332, 106],
-  [333, 109],
-  [334, 107],
-  [335, 13],
-  [340, 16],
-  [341, 17],
-  [342, 18],
-  [343, 91],
-  [344, 16],
-  [345, 17],
-  [346, 18],
-  [347, 93],
-  [348, 93]
-]);
 
 // src/surface.ts
 import { dlopen as dlopen2, ptr as ptr2 } from "bun:ffi";
@@ -1381,6 +1277,69 @@ class Window extends EventTarget {
   }
 }
 
+// src/glfw/keymap.ts
+var keymap = new Map([
+  key(32, "Space"),
+  key(39, "Quote", 222),
+  key(44, "Comma", 188),
+  key(45, "Minus", 189),
+  key(46, "Period", 190),
+  key(47, "Slash", 191),
+  ...repeat(10, (i) => key(48 + i, `Digit${i}`)),
+  key(59, "Semicolon", 186),
+  key(61, "Equal", 187),
+  ...repeat(26, (i) => key(65 + i, `Key${String.fromCharCode(65 + i)}`)),
+  key(91, "BracketLeft", 219),
+  key(92, "Backslash", 220),
+  key(93, "BracketRight", 221),
+  key(96, "Backquote", 192),
+  key(161, "IntlBackslash", 192),
+  key(256, "Escape", 27),
+  key(257, "Enter", 13),
+  key(258, "Tab", 20),
+  key(259, "Backspace", 8),
+  key(260, "Insert", 45),
+  key(261, "Delete", 46),
+  key(262, "ArrowRight", 39),
+  key(263, "ArrowLeft", 37),
+  key(264, "ArrowDown", 40),
+  key(265, "ArrowUp", 38),
+  key(266, "PageUp", 33),
+  key(267, "PageDown", 34),
+  key(268, "Home", 36),
+  key(267, "End", 35),
+  key(280, "CapsLock", 20),
+  key(281, "ScrollLock", 145),
+  key(282, "NumLock", 144),
+  key(283, "PrintScreen", 44),
+  ...repeat(25, (i) => key(290 + i, `F${i}`, 112 + i)),
+  ...repeat(10, (i) => key(320 + i, `Numpad${i}`, 96 + i, 3)),
+  key(330, "NumpadDecimal", 110, 3),
+  key(331, "NumpadDivide", 111, 3),
+  key(332, "NumpadMultiply", 106, 3),
+  key(333, "NumpadSubtract", 109, 3),
+  key(334, "NumpadAdd", 107, 3),
+  key(335, "NumpadEnter", 13, 3),
+  key(340, "ShiftLeft", 16, 1),
+  key(341, "ControlLeft", 17, 1),
+  key(342, "AltLeft", 18, 1),
+  key(343, "MetaLeft", 91, 1),
+  key(344, "ShiftRight", 16, 2),
+  key(345, "ControlRight", 17, 2),
+  key(346, "AltRight", 18, 2),
+  key(347, "MetaRight", 93, 2),
+  key(348, "ContextMenu", 93)
+]);
+function key(id, label, code = id, location = 0) {
+  return [
+    id,
+    { label, code, location }
+  ];
+}
+function repeat(length, producer) {
+  return Array.from({ length }, (_, i) => producer(i));
+}
+
 // src/browser/event-emitter.ts
 class WindowEventEmitter {
   frame;
@@ -1401,6 +1360,7 @@ class WindowEventEmitter {
     meta: false,
     pressed: {}
   };
+  keyChars = getKeyCharacters();
   constructor(windowFrame, domWindow, document) {
     this.frame = windowFrame;
     this.window = domWindow;
@@ -1412,16 +1372,15 @@ class WindowEventEmitter {
     this.frame.setScrollCallback((win, dx, dy) => {
       this.emitMouseWheel(dx, dy);
     });
-    this.frame.setKeyCallback((win, key, scanCode, action, mods) => {
+    this.frame.setKeyCallback((win, key2, scanCode, action, mods) => {
       this.state.ctrl = !!(mods & 2);
       this.state.alt = !!(mods & 4);
       this.state.shift = !!(mods & 1);
       this.state.meta = !!(mods & 8);
-      const code = keymap.get(key);
-      if (code) {
-        this.state.pressed[code] = !!action;
-        const which = keycodes.get(key) ?? 0;
-        this.emitKeyUpDown(code, which, action);
+      const km = keymap.get(key2);
+      if (km) {
+        this.state.pressed[km.label] = !!action;
+        this.emitKeyUpDown(km.label, km.code, km.location, action);
       }
     });
   }
@@ -1506,36 +1465,50 @@ class WindowEventEmitter {
     this.document.dispatchEvent(ev);
     this.canvas?.dispatchEvent(ev);
   }
-  emitKeyUpDown(code, which, pressed) {
+  emitKeyUpDown(label, code, location, pressed) {
     const type = pressed ? "keydown" : "keyup";
     const ev = {
       type,
-      code,
-      key: code.startsWith("Shift") ? "Shift" : code.startsWith("Control") ? "Control" : code.startsWith("Alt") ? "Alt" : code.startsWith("Meta") ? "Meta" : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5).toLowerCase() : code == "Space" ? " " : code,
-      which,
-      keyCode: which,
+      code: label,
+      key: this.keyChars.get(label) ?? label,
+      which: code,
+      keyCode: code,
       ctrlKey: this.state.ctrl,
       altKey: this.state.alt,
       shiftKey: this.state.shift,
       metaKey: this.state.meta,
-      location: this.getKeyLocation(code),
+      location,
       repeat: pressed == 2
     };
     this.window.dispatchEvent(ev);
     this.document.dispatchEvent(ev);
     this.canvas?.dispatchEvent(ev);
   }
-  getKeyLocation(code) {
-    if (code.startsWith("Numpad"))
-      return 3;
-    const loc1 = ["ControlLeft", "AltLeft", "ShiftLeft", "MetaLeft"];
-    const loc2 = ["ControlRight", "AltRight", "ShiftRight", "MetaRight"];
-    if (loc1.includes(code))
-      return 1;
-    if (loc2.includes(code))
-      return 2;
-    return 0;
-  }
+}
+function getKeyCharacters() {
+  return new Map([
+    ["ControlLeft", "Control"],
+    ["ControlRight", "Control"],
+    ["AltLeft", "Alt"],
+    ["AltRight", "Alt"],
+    ["ShiftLeft", "Shift"],
+    ["ShiftRight", "Shift"],
+    ["MetaLeft", "Meta"],
+    ["MetaRight", "Meta"],
+    ...Array.from({ length: 10 }, (_, i) => [`Digit${i}`, String(i)]),
+    ...Array.from({ length: 26 }, (_, i) => [`Key${String.fromCharCode(65 + i)}`, String.fromCharCode(97 + i)]),
+    ["Space", " "],
+    ["Quote", "'"],
+    ["Comma", ","],
+    ["Minus", "-"],
+    ["Period", "."],
+    ["Slash", "/"],
+    ["Semicolon", ";"],
+    ["Equal", "="],
+    ["BracketLeft", "["],
+    ["BracketRight", "]"],
+    ["Backslash", "\\"]
+  ]);
 }
 
 // src/browser/browser.ts

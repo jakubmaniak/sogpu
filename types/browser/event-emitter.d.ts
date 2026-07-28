@@ -7,11 +7,11 @@ export declare class WindowEventEmitter {
     private document;
     private get canvas();
     private state;
+    private keyChars;
     constructor(windowFrame: WindowFrame, domWindow: Window, document: Document);
     private tick;
     private emitPointerUpDown;
     private emitPointerMove;
     private emitMouseWheel;
     private emitKeyUpDown;
-    private getKeyLocation;
 }

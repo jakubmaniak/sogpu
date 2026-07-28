@@ -76,5 +76,3 @@ export declare class GLFWAdapter {
         refreshRate: number;
     } | null;
 }
-export declare const keymap: Map<number, string>;
-export declare const keycodes: Map<number, number>;
