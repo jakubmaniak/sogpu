@@ -125,4 +125,51 @@ export class WindowFrame {
     setCharModsCallback(cb: (winPtr: number, codePoint: number, mods: number) => void) {
         return glfw.setCharModsCallback(this.ptr, cb);
     }
+
+    getDisplayInfo() {
+        let position: ReturnType<typeof glfw.getMonitorPos> | null = null;
+        let videoMode: ReturnType<typeof glfw.getMonitorVideoMode> = null;
+
+        let monitor = glfw.getWindowMonitor(this.ptr);
+
+        if (monitor) {
+            position = glfw.getMonitorPos(monitor);
+            videoMode = glfw.getMonitorVideoMode(monitor);
+        }
+        else {
+            const winPos = this.getPosition();
+            const winSize = this.getSize();
+            const cx = winPos.x + winSize.width / 2;
+            const cy = winPos.y + winSize.height / 2;
+
+            const monitors = glfw.getMonitorList();
+
+            for (const monPtr of monitors) {
+                const pos = glfw.getMonitorPos(monPtr);
+                const vm = glfw.getMonitorVideoMode(monPtr);
+                if (!vm) continue;
+
+                if (cx >= pos.x && cx < pos.x + vm.width && cy >= pos.y && cy < pos.y + vm.height) {
+                    position = pos;
+                    videoMode = vm;
+                    monitor = monPtr;
+                    break;
+                }
+            }
+        }
+
+        if (monitor && position && videoMode) {
+            const scale = glfw.getMonitorContentScale(monitor);
+
+            return {
+                x: position.x,
+                y: position.y,
+                width: videoMode.width,
+                height: videoMode.height,
+                refreshRate: videoMode.refreshRate,
+                pixelDepth: videoMode.redBits + videoMode.greenBits + videoMode.blueBits,
+                pixelRatio: scale.x
+            };
+        }
+    }
 }

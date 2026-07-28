@@ -236,6 +236,88 @@ export class GLFWAdapter {
             glfw.glfwSetCharModsCallback(window, this.charModsCallback.ptr);
         }
     }
+
+    getWindowMonitor(window: Pointer) {
+        return glfw.glfwGetWindowMonitor(window);
+    }
+
+    getPrimaryMonitor() {
+        return glfw.glfwGetPrimaryMonitor();
+    }
+
+    getMonitorList() {
+        const count = new Int32Array(1);
+
+        const array = glfw.glfwGetMonitors(ptr(count));
+        const length = count[0];
+
+        const buffer = toArrayBuffer(array!, 0, length * 8);
+        const ptrs = new BigUint64Array(buffer, 0, length);
+
+        return Array.from(ptrs)
+            .map((ptr) => Number(ptr) as Pointer);
+    }
+
+    getMonitorPos(monitor: Pointer) {
+        const results = new Uint32Array(4);
+        glfw.glfwGetMonitorPos(
+            monitor,
+            ptr(results, 0),
+            ptr(results, 4)
+        );
+
+        return { x: results[0], y: results[1] };
+    }
+
+    getMonitorWorkarea(monitor: Pointer) {
+        const results = new Uint32Array(4);
+
+        glfw.glfwGetMonitorWorkarea(
+            monitor,
+            ptr(results, 0),
+            ptr(results, 4),
+            ptr(results, 8),
+            ptr(results, 12)
+        );
+
+        return {
+            x: results[0],
+            y: results[1],
+            width: results[2],
+            height: results[3]
+        };
+    }
+
+    getMonitorContentScale(monitor: Pointer) {
+        const results = new Float32Array(2);
+
+        glfw.glfwGetMonitorContentScale(
+            monitor,
+            ptr(results, 0),
+            ptr(results, 4)
+        );
+
+        return { x: results[0], y: results[1] };
+    }
+
+    getMonitorVideoMode(monitor: Pointer) {
+        const resultPtr = glfw.glfwGetVideoMode(monitor);
+        if (!resultPtr) {
+            return null;
+        }
+
+        const buffer = toArrayBuffer(resultPtr, 0, 6 * 4);
+        const results = new Uint32Array(buffer, 0, 6);
+
+        return {
+            width: results[0],
+            height: results[1],
+            redBits: results[2],
+            greenBits: results[3],
+            blueBits: results[4],
+            refreshRate: results[5]
+        };
+    }
 }
 
 

@@ -40,4 +40,13 @@ export declare class WindowFrame {
     setKeyCallback(cb: (winPtr: number, key: number, scanCode: number, action: number, mods: number) => void): void;
     setCharCallback(cb: (winPtr: number, codePoint: number) => void): void;
     setCharModsCallback(cb: (winPtr: number, codePoint: number, mods: number) => void): void;
+    getDisplayInfo(): {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        refreshRate: number;
+        pixelDepth: number;
+        pixelRatio: number;
+    } | undefined;
 }

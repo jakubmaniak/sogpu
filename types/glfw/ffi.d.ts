@@ -161,6 +161,34 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwGetPrimaryMonitor: {
+        (): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitors: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowMonitor: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorPos: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorWorkarea: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_3: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_4: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorContentScale: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetVideoMode: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
 } | {
     FALSE: 0;
     TRUE: 1;
@@ -326,6 +354,34 @@ declare const _default: {
     };
     glfwSetScrollCallback: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetPrimaryMonitor: {
+        (): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitors: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowMonitor: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorPos: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorWorkarea: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_3: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_4: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorContentScale: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetVideoMode: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 } | {
@@ -495,6 +551,34 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwGetPrimaryMonitor: {
+        (): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitors: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowMonitor: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorPos: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorWorkarea: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_3: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_4: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorContentScale: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetVideoMode: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
 } | {
     FALSE: 0;
     TRUE: 1;
@@ -656,6 +740,34 @@ declare const _default: {
     };
     glfwSetScrollCallback: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetPrimaryMonitor: {
+        (): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitors: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetWindowMonitor: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorPos: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorWorkarea: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_3: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_4: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetMonitorContentScale: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_2: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwGetVideoMode: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): import("bun:ffi").Pointer | null;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 };

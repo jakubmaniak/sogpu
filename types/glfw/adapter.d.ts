@@ -50,6 +50,31 @@ export declare class GLFWAdapter {
     setCharCallback(window: Pointer, cb: (winPtr: number, codePoint: number) => void): void;
     private charModsCallback?;
     setCharModsCallback(window: Pointer, cb: (winPtr: number, codePoint: number, mods: number) => void): void;
+    getWindowMonitor(window: Pointer): Pointer | null;
+    getPrimaryMonitor(): Pointer | null;
+    getMonitorList(): Pointer[];
+    getMonitorPos(monitor: Pointer): {
+        x: number;
+        y: number;
+    };
+    getMonitorWorkarea(monitor: Pointer): {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    getMonitorContentScale(monitor: Pointer): {
+        x: number;
+        y: number;
+    };
+    getMonitorVideoMode(monitor: Pointer): {
+        width: number;
+        height: number;
+        redBits: number;
+        greenBits: number;
+        blueBits: number;
+        refreshRate: number;
+    } | null;
 }
 export declare const keymap: Map<number, string>;
 export declare const keycodes: Map<number, number>;

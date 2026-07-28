@@ -147,7 +147,7 @@ function addGPUErrorHandler(adapter) {
   };
 }
 // src/glfw/adapter.ts
-import { JSCallback, ptr } from "bun:ffi";
+import { JSCallback, ptr, toArrayBuffer as toArrayBuffer2 } from "bun:ffi";
 
 // src/platform.ts
 var {fileURLToPath } = globalThis.Bun;
@@ -377,6 +377,33 @@ var { symbols: glfw } = dlopen(libFilePath, {
     returns: FFIType.void,
     args: [FFIType.pointer, FFIType.function]
   },
+  glfwGetPrimaryMonitor: {
+    returns: FFIType.pointer
+  },
+  glfwGetMonitors: {
+    returns: FFIType.pointer,
+    args: [FFIType.pointer]
+  },
+  glfwGetWindowMonitor: {
+    returns: FFIType.pointer,
+    args: [FFIType.pointer]
+  },
+  glfwGetMonitorPos: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+  },
+  glfwGetMonitorWorkarea: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer]
+  },
+  glfwGetMonitorContentScale: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+  },
+  glfwGetVideoMode: {
+    returns: FFIType.pointer,
+    args: [FFIType.pointer]
+  },
   ...platformDependent[platform]
 });
 var ffi_default = { ...glfw, ...constants };
@@ -562,6 +589,56 @@ class GLFWAdapter {
     if (this.charModsCallback.ptr) {
       ffi_default.glfwSetCharModsCallback(window, this.charModsCallback.ptr);
     }
+  }
+  getWindowMonitor(window) {
+    return ffi_default.glfwGetWindowMonitor(window);
+  }
+  getPrimaryMonitor() {
+    return ffi_default.glfwGetPrimaryMonitor();
+  }
+  getMonitorList() {
+    const count = new Int32Array(1);
+    const array = ffi_default.glfwGetMonitors(ptr(count));
+    const length = count[0];
+    const buffer = toArrayBuffer2(array, 0, length * 8);
+    const ptrs = new BigUint64Array(buffer, 0, length);
+    return Array.from(ptrs).map((ptr2) => Number(ptr2));
+  }
+  getMonitorPos(monitor) {
+    const results = new Uint32Array(4);
+    ffi_default.glfwGetMonitorPos(monitor, ptr(results, 0), ptr(results, 4));
+    return { x: results[0], y: results[1] };
+  }
+  getMonitorWorkarea(monitor) {
+    const results = new Uint32Array(4);
+    ffi_default.glfwGetMonitorWorkarea(monitor, ptr(results, 0), ptr(results, 4), ptr(results, 8), ptr(results, 12));
+    return {
+      x: results[0],
+      y: results[1],
+      width: results[2],
+      height: results[3]
+    };
+  }
+  getMonitorContentScale(monitor) {
+    const results = new Float32Array(2);
+    ffi_default.glfwGetMonitorContentScale(monitor, ptr(results, 0), ptr(results, 4));
+    return { x: results[0], y: results[1] };
+  }
+  getMonitorVideoMode(monitor) {
+    const resultPtr = ffi_default.glfwGetVideoMode(monitor);
+    if (!resultPtr) {
+      return null;
+    }
+    const buffer = toArrayBuffer2(resultPtr, 0, 6 * 4);
+    const results = new Uint32Array(buffer, 0, 6);
+    return {
+      width: results[0],
+      height: results[1],
+      redBits: results[2],
+      greenBits: results[3],
+      blueBits: results[4],
+      refreshRate: results[5]
+    };
   }
 }
 var keymap = new Map([
@@ -954,6 +1031,45 @@ class WindowFrame {
   }
   setCharModsCallback(cb) {
     return glfw2.setCharModsCallback(this.ptr, cb);
+  }
+  getDisplayInfo() {
+    let position = null;
+    let videoMode = null;
+    let monitor = glfw2.getWindowMonitor(this.ptr);
+    if (monitor) {
+      position = glfw2.getMonitorPos(monitor);
+      videoMode = glfw2.getMonitorVideoMode(monitor);
+    } else {
+      const winPos = this.getPosition();
+      const winSize = this.getSize();
+      const cx = winPos.x + winSize.width / 2;
+      const cy = winPos.y + winSize.height / 2;
+      const monitors = glfw2.getMonitorList();
+      for (const monPtr of monitors) {
+        const pos = glfw2.getMonitorPos(monPtr);
+        const vm = glfw2.getMonitorVideoMode(monPtr);
+        if (!vm)
+          continue;
+        if (cx >= pos.x && cx < pos.x + vm.width && cy >= pos.y && cy < pos.y + vm.height) {
+          position = pos;
+          videoMode = vm;
+          monitor = monPtr;
+          break;
+        }
+      }
+    }
+    if (monitor && position && videoMode) {
+      const scale = glfw2.getMonitorContentScale(monitor);
+      return {
+        x: position.x,
+        y: position.y,
+        width: videoMode.width,
+        height: videoMode.height,
+        refreshRate: videoMode.refreshRate,
+        pixelDepth: videoMode.redBits + videoMode.greenBits + videoMode.blueBits,
+        pixelRatio: scale.x
+      };
+    }
   }
 }
 // src/browser/browser.ts

@@ -213,6 +213,33 @@ const { symbols: glfw } = dlopen(libFilePath, {
         returns: FFIType.void,
         args: [FFIType.pointer, FFIType.function]
     },
+    glfwGetPrimaryMonitor: {
+        returns: FFIType.pointer
+    },
+    glfwGetMonitors: {
+        returns: FFIType.pointer,
+        args: [FFIType.pointer]
+    },
+    glfwGetWindowMonitor: {
+        returns: FFIType.pointer,
+        args: [FFIType.pointer]
+    },
+    glfwGetMonitorPos: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    },
+    glfwGetMonitorWorkarea: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    },
+    glfwGetMonitorContentScale: {
+        returns: FFIType.void,
+        args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    },
+    glfwGetVideoMode: {
+        returns: FFIType.pointer,
+        args: [FFIType.pointer]
+    },
     ...platformDependent[platform]
 } as const);
 
