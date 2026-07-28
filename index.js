@@ -147,7 +147,7 @@ function addGPUErrorHandler(adapter) {
   };
 }
 // src/glfw/adapter.ts
-import { ptr } from "bun:ffi";
+import { JSCallback, ptr } from "bun:ffi";
 
 // src/platform.ts
 var {fileURLToPath } = globalThis.Bun;
@@ -200,6 +200,7 @@ var constants = {
   REFRESH_RATE: 135183,
   DOUBLEBUFFER: 135184,
   CLIENT_API: 139265,
+  LOCK_KEY_MODS: 208900,
   NO_API: 0,
   RELEASE: 0,
   PRESS: 1,
@@ -213,7 +214,18 @@ var constants = {
   MOD_ALT: 4,
   MOD_SUPER: 8,
   MOD_CAPS_LOCK: 16,
-  MOD_NUM_LOCK: 32
+  MOD_NUM_LOCK: 32,
+  KEY_SPACE: 32,
+  KEY_ESCAPE: 256,
+  KEY_ENTER: 257,
+  KEY_LEFT_SHIFT: 340,
+  KEY_LEFT_CONTROL: 341,
+  KEY_LEFT_ALT: 342,
+  KEY_LEFT_SUPER: 343,
+  KEY_RIGHT_SHIFT: 344,
+  KEY_RIGHT_CONTROL: 345,
+  KEY_RIGHT_ALT: 346,
+  KEY_RIGHT_SUPER: 347
 };
 var platform = getPlatformType();
 var platformDependent = {
@@ -325,6 +337,10 @@ var { symbols: glfw } = dlopen(libFilePath, {
     returns: FFIType.void,
     args: [FFIType.pointer]
   },
+  glfwSetWindowSizeCallback: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.ptr]
+  },
   glfwSetInputMode: {
     returns: FFIType.void,
     args: [FFIType.pointer, FFIType.i32, FFIType.i32]
@@ -332,6 +348,18 @@ var { symbols: glfw } = dlopen(libFilePath, {
   glfwGetKey: {
     returns: FFIType.i32,
     args: [FFIType.pointer, FFIType.i32]
+  },
+  glfwSetKeyCallback: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.function]
+  },
+  glfwSetCharCallback: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.function]
+  },
+  glfwSetCharModsCallback: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.function]
   },
   glfwGetMouseButton: {
     returns: FFIType.i32,
@@ -344,6 +372,10 @@ var { symbols: glfw } = dlopen(libFilePath, {
   glfwSetCursorPos: {
     returns: FFIType.void,
     args: [FFIType.pointer, FFIType.double, FFIType.double]
+  },
+  glfwSetScrollCallback: {
+    returns: FFIType.void,
+    args: [FFIType.pointer, FFIType.function]
   },
   ...platformDependent[platform]
 });
@@ -372,6 +404,7 @@ class GLFWAdapter {
     if (!window) {
       throw new Error("Failed to create a window.");
     }
+    ffi_default.glfwSetInputMode(window, ffi_default.LOCK_KEY_MODS, ffi_default.TRUE);
     return window;
   }
   destroyWindow(window) {
@@ -458,6 +491,21 @@ class GLFWAdapter {
   isWindowHovered(window) {
     return ffi_default.glfwGetWindowAttrib(window, ffi_default.HOVERED) == 1;
   }
+  windowSizeCallback;
+  setWindowSizeCallback(window, cb) {
+    this.windowSizeCallback?.close();
+    if (cb == null) {
+      ffi_default.glfwSetWindowSizeCallback(window, null);
+    } else {
+      this.windowSizeCallback = new JSCallback(cb, {
+        args: ["ptr", "int", "int"],
+        returns: "void"
+      });
+      if (this.windowSizeCallback.ptr) {
+        ffi_default.glfwSetWindowSizeCallback(window, this.windowSizeCallback.ptr);
+      }
+    }
+  }
   mousePos = new Float64Array(2);
   mouseXPtr = ptr(this.mousePos);
   mouseYPtr = ptr(this.mousePos, 8);
@@ -468,10 +516,158 @@ class GLFWAdapter {
   getMouseButton(window, button) {
     return ffi_default.glfwGetMouseButton(window, button) == ffi_default.PRESS;
   }
-  getKeyState(window, key) {
-    return ffi_default.glfwGetKey(window, key);
+  scrollCallback;
+  setScrollCallback(window, cb) {
+    this.scrollCallback?.close();
+    this.scrollCallback = new JSCallback(cb, {
+      args: ["ptr", "double", "double"],
+      returns: "void"
+    });
+    if (this.scrollCallback.ptr) {
+      ffi_default.glfwSetScrollCallback(window, this.scrollCallback.ptr);
+    }
+  }
+  isKeyPressed(window, key) {
+    return ffi_default.glfwGetKey(window, key) == ffi_default.PRESS;
+  }
+  keyCallback;
+  setKeyCallback(window, cb) {
+    this.keyCallback?.close();
+    this.keyCallback = new JSCallback(cb, {
+      args: ["ptr", "int", "int", "int", "int"],
+      returns: "void"
+    });
+    if (this.keyCallback.ptr) {
+      ffi_default.glfwSetKeyCallback(window, this.keyCallback.ptr);
+    }
+  }
+  charCallback;
+  setCharCallback(window, cb) {
+    this.charCallback?.close();
+    this.charCallback = new JSCallback(cb, {
+      args: ["ptr", "u32"],
+      returns: "void"
+    });
+    if (this.charCallback.ptr) {
+      ffi_default.glfwSetCharCallback(window, this.charCallback.ptr);
+    }
+  }
+  charModsCallback;
+  setCharModsCallback(window, cb) {
+    this.charModsCallback?.close();
+    this.charModsCallback = new JSCallback(cb, {
+      args: ["ptr", "u32", "int"],
+      returns: "void"
+    });
+    if (this.charModsCallback.ptr) {
+      ffi_default.glfwSetCharModsCallback(window, this.charModsCallback.ptr);
+    }
   }
 }
+var keymap = new Map([
+  [32, "Space"],
+  [39, "Quote"],
+  [44, "Comma"],
+  [45, "Minus"],
+  [46, "Period"],
+  [47, "Slash"],
+  ...Array.from({ length: 10 }, (_, k) => [48 + k, `Digit${k}`]),
+  [59, "Semicolon"],
+  [61, "Equal"],
+  ...Array.from({ length: 26 }, (_, k) => [65 + k, `Key${String.fromCharCode(65 + k)}`]),
+  [91, "BracketLeft"],
+  [92, "Backslash"],
+  [93, "BracketRight"],
+  [96, "Backquote"],
+  [161, "IntlBackslash"],
+  [256, "Escape"],
+  [257, "Enter"],
+  [258, "Tab"],
+  [259, "Backspace"],
+  [260, "Insert"],
+  [261, "Delete"],
+  [262, "ArrowRight"],
+  [263, "ArrowLeft"],
+  [264, "ArrowDown"],
+  [265, "ArrowUp"],
+  [266, "PageUp"],
+  [267, "PageDown"],
+  [268, "Home"],
+  [267, "End"],
+  [280, "CapsLock"],
+  [281, "ScrollLock"],
+  [282, "NumLock"],
+  [283, "PrintScreen"],
+  ...Array.from({ length: 25 }, (_, k) => [290 + k, `F${k + 1}`]),
+  ...Array.from({ length: 10 }, (_, k) => [320 + k, `Numpad${k}`]),
+  [330, "NumpadDecimal"],
+  [331, "NumpadDivide"],
+  [332, "NumpadMultiply"],
+  [333, "NumpadSubtract"],
+  [334, "NumpadAdd"],
+  [335, "NumpadEnter"],
+  [340, "ShiftLeft"],
+  [341, "ControlLeft"],
+  [342, "AltLeft"],
+  [343, "MetaLeft"],
+  [344, "ShiftRight"],
+  [345, "ControlRight"],
+  [346, "AltRight"],
+  [347, "MetaRight"],
+  [348, "ContextMenu"]
+]);
+var keycodes = new Map([
+  [32, 32],
+  [39, 222],
+  [44, 188],
+  [45, 189],
+  [46, 190],
+  [47, 191],
+  ...Array.from({ length: 10 }, (_, k) => [48 + k, 48 + k]),
+  [59, 186],
+  [61, 187],
+  ...Array.from({ length: 26 }, (_, k) => [65 + k, 65 + k]),
+  [91, 219],
+  [92, 220],
+  [93, 221],
+  [96, 192],
+  [161, 192],
+  [256, 27],
+  [257, 13],
+  [258, 20],
+  [259, 8],
+  [260, 45],
+  [261, 46],
+  [262, 39],
+  [263, 37],
+  [264, 40],
+  [265, 38],
+  [266, 33],
+  [267, 34],
+  [268, 36],
+  [267, 35],
+  [280, 20],
+  [281, 145],
+  [282, 144],
+  [283, 44],
+  ...Array.from({ length: 25 }, (_, k) => [290 + k, 112 + k]),
+  ...Array.from({ length: 10 }, (_, k) => [320 + k, 96 + k]),
+  [330, 110],
+  [331, 111],
+  [332, 106],
+  [333, 109],
+  [334, 107],
+  [335, 13],
+  [340, 16],
+  [341, 17],
+  [342, 18],
+  [343, 91],
+  [344, 16],
+  [345, 17],
+  [346, 18],
+  [347, 93],
+  [348, 93]
+]);
 
 // src/surface.ts
 import { dlopen as dlopen2, ptr as ptr2 } from "bun:ffi";
@@ -735,11 +931,29 @@ class WindowFrame {
   isHovered() {
     return glfw2.isWindowHovered(this.ptr);
   }
+  setSizeCallback(cb) {
+    glfw2.setWindowSizeCallback(this.ptr, cb ?? null);
+  }
   isMouseButtonPressed(button) {
     return glfw2.getMouseButton(this.ptr, button);
   }
   getMousePosition() {
     return glfw2.getMousePosition(this.ptr);
+  }
+  setScrollCallback(cb) {
+    glfw2.setScrollCallback(this.ptr, cb);
+  }
+  isKeyPressed(key) {
+    return glfw2.isKeyPressed(this.ptr, key);
+  }
+  setKeyCallback(cb) {
+    return glfw2.setKeyCallback(this.ptr, cb);
+  }
+  setCharCallback(cb) {
+    return glfw2.setCharCallback(this.ptr, cb);
+  }
+  setCharModsCallback(cb) {
+    return glfw2.setCharModsCallback(this.ptr, cb);
   }
 }
 // src/browser/browser.ts
@@ -790,8 +1004,9 @@ class EventTarget {
   dispatchEvent(event) {
     event.target ??= this;
     event.currentTarget = this;
-    event.eventPhase = 2;
+    event.eventPhase = 0;
     event.timeStamp = performance.now();
+    event.preventDefault = function() {};
     this._listeners.get(event.type)?.forEach((cb) => cb.call(this, event));
     return true;
   }
@@ -1052,30 +1267,66 @@ class Window extends EventTarget {
 
 // src/browser/event-emitter.ts
 class WindowEventEmitter {
-  windowFrame;
+  frame;
+  window;
   document;
+  get canvas() {
+    return this.frame.getContext().canvas;
+  }
   state = {
     x: 0,
     y: 0,
     lmb: false,
-    rmb: false
+    rmb: false,
+    mmb: false,
+    ctrl: false,
+    alt: false,
+    shift: false,
+    meta: false,
+    pressed: {}
   };
-  constructor(windowFrame, document) {
-    this.windowFrame = windowFrame;
+  constructor(windowFrame, domWindow, document) {
+    this.frame = windowFrame;
+    this.window = domWindow;
     this.document = document;
     setInterval(() => this.tick(), 16);
+    this.frame.setSizeCallback((win, width, height) => {
+      this.window.dispatchEvent({ type: "resize" });
+    });
+    this.frame.setScrollCallback((win, dx, dy) => {
+      this.emitMouseWheel(dx, dy);
+    });
+    this.frame.setKeyCallback((win, key, scanCode, action, mods) => {
+      this.state.ctrl = !!(mods & 2);
+      this.state.alt = !!(mods & 4);
+      this.state.shift = !!(mods & 1);
+      this.state.meta = !!(mods & 8);
+      const code = keymap.get(key);
+      if (code) {
+        this.state.pressed[code] = !!action;
+        const which = keycodes.get(key) ?? 0;
+        this.emitKeyUpDown(code, which, action);
+      }
+    });
   }
   tick() {
-    const mouse = this.windowFrame.getMousePosition();
-    const lmb = this.windowFrame.isMouseButtonPressed(0);
-    const rmb = this.windowFrame.isMouseButtonPressed(1);
+    const win = this.frame;
+    const mouse = win.getMousePosition();
+    const lmb = win.isMouseButtonPressed(0);
+    const rmb = win.isMouseButtonPressed(1);
+    const mmb = win.isMouseButtonPressed(2);
+    this.state.ctrl = win.isKeyPressed(0);
     if (lmb != this.state.lmb) {
       this.state.lmb = lmb;
-      this.emitPointerUpDown(true, lmb);
+      this.emitPointerUpDown(0, lmb);
     }
     if (rmb != this.state.rmb) {
       this.state.rmb = rmb;
-      this.emitPointerUpDown(false, rmb);
+      this.emitPointerUpDown(2, rmb);
+    }
+    if (mmb != this.state.mmb) {
+      this.state.mmb = mmb;
+      this.emitPointerUpDown(1, mmb);
     }
     if (mouse.x != this.state.x || mouse.y != this.state.y) {
       this.emitPointerMove(mouse.x, mouse.y);
@@ -1083,16 +1334,16 @@ class WindowEventEmitter {
       this.state.y = mouse.y;
     }
   }
-  emitPointerUpDown(left, pressed) {
+  emitPointerUpDown(btn, pressed) {
     const type = pressed ? "pointerdown" : "pointerup";
     const { x, y } = this.state;
     const ev = {
       type,
       pointerId: 1,
       pointerType: "mouse",
-      which: left ? 1 : 3,
-      button: left ? 0 : 2,
-      buttons: left ? 1 : 2,
+      which: btn + 1,
+      button: btn,
+      buttons: 1 << (btn == 1 ? 2 : btn == 2 ? 1 : btn),
       x,
       y,
       clientX: x,
@@ -1103,7 +1354,7 @@ class WindowEventEmitter {
       movementY: 0
     };
     this.document.dispatchEvent(ev);
-    this.windowFrame.getContext().canvas?.dispatchEvent(ev);
+    this.canvas?.dispatchEvent(ev);
   }
   emitPointerMove(x, y) {
     const ev = {
@@ -1123,7 +1374,51 @@ class WindowEventEmitter {
       movementY: y - this.state.y
     };
     this.document.dispatchEvent(ev);
-    this.windowFrame.getContext().canvas?.dispatchEvent(ev);
+    this.canvas?.dispatchEvent(ev);
+  }
+  emitMouseWheel(dx, dy) {
+    const ev = {
+      type: "wheel",
+      deltaMode: 0,
+      deltaX: dx * -40,
+      deltaY: dy * -40,
+      deltaZ: 0,
+      wheelDelta: dy * 1200,
+      wheelDeltaX: dx * 1200,
+      wheelDeltaY: dy * 1200
+    };
+    this.document.dispatchEvent(ev);
+    this.canvas?.dispatchEvent(ev);
+  }
+  emitKeyUpDown(code, which, pressed) {
+    const type = pressed ? "keydown" : "keyup";
+    const ev = {
+      type,
+      code,
+      key: code.startsWith("Shift") ? "Shift" : code.startsWith("Control") ? "Control" : code.startsWith("Alt") ? "Alt" : code.startsWith("Meta") ? "Meta" : code.startsWith("Key") ? code.slice(3).toLowerCase() : code.startsWith("Digit") ? code.slice(5).toLowerCase() : code == "Space" ? " " : code,
+      which,
+      keyCode: which,
+      ctrlKey: this.state.ctrl,
+      altKey: this.state.alt,
+      shiftKey: this.state.shift,
+      metaKey: this.state.meta,
+      location: this.getKeyLocation(code),
+      repeat: pressed == 2
+    };
+    this.window.dispatchEvent(ev);
+    this.document.dispatchEvent(ev);
+    this.canvas?.dispatchEvent(ev);
+  }
+  getKeyLocation(code) {
+    if (code.startsWith("Numpad"))
+      return 3;
+    const loc1 = ["ControlLeft", "AltLeft", "ShiftLeft", "MetaLeft"];
+    const loc2 = ["ControlRight", "AltRight", "ShiftRight", "MetaRight"];
+    if (loc1.includes(code))
+      return 1;
+    if (loc2.includes(code))
+      return 2;
+    return 0;
   }
 }
 
@@ -1170,7 +1465,7 @@ function attachDOM(windowFrame, fps) {
   globalThis.ProgressEvent = ProgressEvent;
   globalThis.DOMParser = DOMParser;
   globalThis.window.URL = URL;
-  new WindowEventEmitter(windowFrame, document);
+  new WindowEventEmitter(windowFrame, window, document);
   globalThis.localStorage = new Storage;
   globalThis.sessionStorage = new Storage;
 }

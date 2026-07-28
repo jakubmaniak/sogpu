@@ -31,6 +31,8 @@ export declare class GLFWAdapter {
     isWindowVisible(window: Pointer): boolean;
     isWindowFocused(window: Pointer): boolean;
     isWindowHovered(window: Pointer): boolean;
+    private windowSizeCallback?;
+    setWindowSizeCallback(window: Pointer, cb: null | ((winPtr: number, width: number, height: number) => void)): void;
     private readonly mousePos;
     private readonly mouseXPtr;
     private readonly mouseYPtr;
@@ -39,5 +41,15 @@ export declare class GLFWAdapter {
         y: number;
     };
     getMouseButton(window: Pointer, button: number): boolean;
-    getKeyState(window: Pointer, key: number): number;
+    private scrollCallback?;
+    setScrollCallback(window: Pointer, cb: (winPtr: number, dx: number, dy: number) => void): void;
+    isKeyPressed(window: Pointer, key: number): boolean;
+    private keyCallback?;
+    setKeyCallback(window: Pointer, cb: (winPtr: number, key: number, scanCode: number, action: number, mods: number) => void): void;
+    private charCallback?;
+    setCharCallback(window: Pointer, cb: (winPtr: number, codePoint: number) => void): void;
+    private charModsCallback?;
+    setCharModsCallback(window: Pointer, cb: (winPtr: number, codePoint: number, mods: number) => void): void;
 }
+export declare const keymap: Map<number, string>;
+export declare const keycodes: Map<number, number>;

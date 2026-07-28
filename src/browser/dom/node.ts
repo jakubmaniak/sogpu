@@ -1,5 +1,5 @@
 import type { Document } from './document.js';
-import { EventTarget, type EventListener } from './event-target.js';
+import { EventTarget } from './event-target.js';
 
 
 export class Node extends EventTarget {

@@ -29,9 +29,15 @@ export declare class WindowFrame {
     isVisible(): boolean;
     isFocused(): boolean;
     isHovered(): boolean;
+    setSizeCallback(cb?: (winPtr: number, width: number, height: number) => void): void;
     isMouseButtonPressed(button: number): boolean;
     getMousePosition(): {
         x: number;
         y: number;
     };
+    setScrollCallback(cb: (winPtr: number, dx: number, dy: number) => void): void;
+    isKeyPressed(key: number): boolean;
+    setKeyCallback(cb: (winPtr: number, key: number, scanCode: number, action: number, mods: number) => void): void;
+    setCharCallback(cb: (winPtr: number, codePoint: number) => void): void;
+    setCharModsCallback(cb: (winPtr: number, codePoint: number, mods: number) => void): void;
 }

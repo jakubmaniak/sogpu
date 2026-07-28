@@ -94,11 +94,35 @@ export class WindowFrame {
         return glfw.isWindowHovered(this.ptr);
     }
 
+    setSizeCallback(cb?: (winPtr: number, width: number, height: number) => void) {
+        glfw.setWindowSizeCallback(this.ptr, cb ?? null);
+    }
+
     isMouseButtonPressed(button: number) {
         return glfw.getMouseButton(this.ptr, button);
     }
 
     getMousePosition() {
         return glfw.getMousePosition(this.ptr);
+    }
+
+    setScrollCallback(cb: (winPtr: number, dx: number, dy: number) => void) {
+        glfw.setScrollCallback(this.ptr, cb);
+    }
+
+    isKeyPressed(key: number) {
+        return glfw.isKeyPressed(this.ptr, key);
+    }
+
+    setKeyCallback(cb: (winPtr: number, key: number, scanCode: number, action: number, mods: number) => void) {
+        return glfw.setKeyCallback(this.ptr, cb);
+    }
+
+    setCharCallback(cb: (winPtr: number, codePoint: number) => void) {
+        return glfw.setCharCallback(this.ptr, cb);
+    }
+
+    setCharModsCallback(cb: (winPtr: number, codePoint: number, mods: number) => void) {
+        return glfw.setCharModsCallback(this.ptr, cb);
     }
 }

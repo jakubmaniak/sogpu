@@ -19,6 +19,7 @@ declare const _default: {
     REFRESH_RATE: 135183;
     DOUBLEBUFFER: 135184;
     CLIENT_API: 139265;
+    LOCK_KEY_MODS: 208900;
     NO_API: 0;
     RELEASE: 0;
     PRESS: 1;
@@ -33,6 +34,17 @@ declare const _default: {
     MOD_SUPER: 8;
     MOD_CAPS_LOCK: 16;
     MOD_NUM_LOCK: 32;
+    KEY_SPACE: 32;
+    KEY_ESCAPE: 256;
+    KEY_ENTER: 257;
+    KEY_LEFT_SHIFT: 340;
+    KEY_LEFT_CONTROL: 341;
+    KEY_LEFT_ALT: 342;
+    KEY_LEFT_SUPER: 343;
+    KEY_RIGHT_SHIFT: 344;
+    KEY_RIGHT_CONTROL: 345;
+    KEY_RIGHT_ALT: 346;
+    KEY_RIGHT_SUPER: 347;
     glfwGetWin32Window: {
         (...args: unknown[]): unknown;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -109,12 +121,28 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwSetWindowSizeCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetInputMode: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetKey: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetKeyCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharModsCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetMouseButton: {
@@ -127,6 +155,10 @@ declare const _default: {
     };
     glfwSetCursorPos: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetScrollCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 } | {
@@ -150,6 +182,7 @@ declare const _default: {
     REFRESH_RATE: 135183;
     DOUBLEBUFFER: 135184;
     CLIENT_API: 139265;
+    LOCK_KEY_MODS: 208900;
     NO_API: 0;
     RELEASE: 0;
     PRESS: 1;
@@ -164,6 +197,17 @@ declare const _default: {
     MOD_SUPER: 8;
     MOD_CAPS_LOCK: 16;
     MOD_NUM_LOCK: 32;
+    KEY_SPACE: 32;
+    KEY_ESCAPE: 256;
+    KEY_ENTER: 257;
+    KEY_LEFT_SHIFT: 340;
+    KEY_LEFT_CONTROL: 341;
+    KEY_LEFT_ALT: 342;
+    KEY_LEFT_SUPER: 343;
+    KEY_RIGHT_SHIFT: 344;
+    KEY_RIGHT_CONTROL: 345;
+    KEY_RIGHT_ALT: 346;
+    KEY_RIGHT_SUPER: 347;
     glfwGetWaylandWindow: {
         (...args: unknown[]): unknown;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -244,12 +288,28 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwSetWindowSizeCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetInputMode: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetKey: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetKeyCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharModsCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetMouseButton: {
@@ -262,6 +322,10 @@ declare const _default: {
     };
     glfwSetCursorPos: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetScrollCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 } | {
@@ -285,6 +349,7 @@ declare const _default: {
     REFRESH_RATE: 135183;
     DOUBLEBUFFER: 135184;
     CLIENT_API: 139265;
+    LOCK_KEY_MODS: 208900;
     NO_API: 0;
     RELEASE: 0;
     PRESS: 1;
@@ -299,6 +364,17 @@ declare const _default: {
     MOD_SUPER: 8;
     MOD_CAPS_LOCK: 16;
     MOD_NUM_LOCK: 32;
+    KEY_SPACE: 32;
+    KEY_ESCAPE: 256;
+    KEY_ENTER: 257;
+    KEY_LEFT_SHIFT: 340;
+    KEY_LEFT_CONTROL: 341;
+    KEY_LEFT_ALT: 342;
+    KEY_LEFT_SUPER: 343;
+    KEY_RIGHT_SHIFT: 344;
+    KEY_RIGHT_CONTROL: 345;
+    KEY_RIGHT_ALT: 346;
+    KEY_RIGHT_SUPER: 347;
     glfwGetX11Window: {
         (...args: unknown[]): unknown;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -379,12 +455,28 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwSetWindowSizeCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetInputMode: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetKey: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetKeyCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharModsCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetMouseButton: {
@@ -397,6 +489,10 @@ declare const _default: {
     };
     glfwSetCursorPos: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetScrollCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 } | {
@@ -420,6 +516,7 @@ declare const _default: {
     REFRESH_RATE: 135183;
     DOUBLEBUFFER: 135184;
     CLIENT_API: 139265;
+    LOCK_KEY_MODS: 208900;
     NO_API: 0;
     RELEASE: 0;
     PRESS: 1;
@@ -434,6 +531,17 @@ declare const _default: {
     MOD_SUPER: 8;
     MOD_CAPS_LOCK: 16;
     MOD_NUM_LOCK: 32;
+    KEY_SPACE: 32;
+    KEY_ESCAPE: 256;
+    KEY_ENTER: 257;
+    KEY_LEFT_SHIFT: 340;
+    KEY_LEFT_CONTROL: 341;
+    KEY_LEFT_ALT: 342;
+    KEY_LEFT_SUPER: 343;
+    KEY_RIGHT_SHIFT: 344;
+    KEY_RIGHT_CONTROL: 345;
+    KEY_RIGHT_ALT: 346;
+    KEY_RIGHT_SUPER: 347;
     glfwGetCocoaWindow: {
         (...args: unknown[]): unknown;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
@@ -510,12 +618,28 @@ declare const _default: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
+    glfwSetWindowSizeCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
     glfwSetInputMode: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetKey: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number): number;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetKeyCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetCharModsCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
     glfwGetMouseButton: {
@@ -528,6 +652,10 @@ declare const _default: {
     };
     glfwSetCursorPos: {
         (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: number, args_2: number): undefined;
+        __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
+    };
+    glfwSetScrollCallback: {
+        (args_0: import("bun:ffi").CString | NodeJS.TypedArray<ArrayBufferLike> | import("bun:ffi").Pointer | null, args_1: import("bun:ffi").JSCallback | import("bun:ffi").Pointer): undefined;
         __ffi_function_callable: typeof import("bun:ffi").FFIFunctionCallableSymbol;
     };
 };

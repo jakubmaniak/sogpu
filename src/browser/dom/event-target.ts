@@ -23,8 +23,9 @@ export class EventTarget {
     dispatchEvent(event: { type: string } & Record<string, any>) {
         event.target ??= this;
         event.currentTarget = this;
-        event.eventPhase = 2;
+        event.eventPhase = 0;
         event.timeStamp = performance.now();
+        event.preventDefault = function() { };
 
         this._listeners.get(event.type)?.forEach((cb) => cb.call(this, event));
 

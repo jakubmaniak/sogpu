@@ -1,9 +1,9 @@
-import { ptr, type Pointer } from 'bun:ffi';
+import { JSCallback, ptr, toArrayBuffer, type Pointer } from 'bun:ffi';
 import { getPlatformType } from '../platform.js';
 import glfw from './ffi.js';
 
 
-// glfw 3.0+
+// glfw 3.1+
 export class GLFWAdapter {
     constructor() {
         this.init();
@@ -31,6 +31,8 @@ export class GLFWAdapter {
         if (!window) {
             throw new Error('Failed to create a window.');
         }
+
+        glfw.glfwSetInputMode(window, glfw.LOCK_KEY_MODS, glfw.TRUE);
 
         return window;
     }
@@ -137,6 +139,27 @@ export class GLFWAdapter {
         return glfw.glfwGetWindowAttrib(window, glfw.HOVERED) == 1;
     }
 
+    private windowSizeCallback?: JSCallback;
+
+    setWindowSizeCallback(window: Pointer, cb: null | ((winPtr: number, width: number, height: number) => void)) {
+        this.windowSizeCallback?.close();
+
+        if (cb == null) {
+            glfw.glfwSetWindowSizeCallback(window, null);
+        }
+        else {
+            this.windowSizeCallback = new JSCallback(cb, {
+                args: ['ptr', 'int', 'int'],
+                returns: 'void'
+            });
+
+            if (this.windowSizeCallback.ptr) {
+                glfw.glfwSetWindowSizeCallback(window, this.windowSizeCallback.ptr);
+            }
+        }
+    }
+
+
     private readonly mousePos = new Float64Array(2);
     private readonly mouseXPtr = ptr(this.mousePos);
     private readonly mouseYPtr = ptr(this.mousePos, 8);
@@ -150,7 +173,174 @@ export class GLFWAdapter {
         return glfw.glfwGetMouseButton(window, button) == glfw.PRESS;
     }
 
-    getKeyState(window: Pointer, key: number) {
-        return glfw.glfwGetKey(window, key);
+    private scrollCallback?: JSCallback;
+
+    setScrollCallback(window: Pointer, cb: (winPtr: number, dx: number, dy: number) => void) {
+        this.scrollCallback?.close();
+
+        this.scrollCallback = new JSCallback(cb, {
+            args: ['ptr', 'double', 'double'],
+            returns: 'void'
+        });
+
+        if (this.scrollCallback.ptr) {
+            glfw.glfwSetScrollCallback(window, this.scrollCallback.ptr);
+        }
+    }
+
+    isKeyPressed(window: Pointer, key: number) {
+        return glfw.glfwGetKey(window, key) == glfw.PRESS;
+    }
+
+    private keyCallback?: JSCallback;
+
+    setKeyCallback(window: Pointer, cb: (winPtr: number, key: number, scanCode: number, action: number, mods: number) => void) {
+        this.keyCallback?.close();
+
+        this.keyCallback = new JSCallback(cb, {
+            args: ['ptr', 'int', 'int', 'int', 'int'],
+            returns: 'void'
+        });
+
+        if (this.keyCallback.ptr) {
+            glfw.glfwSetKeyCallback(window, this.keyCallback.ptr);
+        }
+    }
+
+    private charCallback?: JSCallback;
+
+    setCharCallback(window: Pointer, cb: (winPtr: number, codePoint: number) => void) {
+        this.charCallback?.close();
+
+        this.charCallback = new JSCallback(cb, {
+            args: ['ptr', 'u32'],
+            returns: 'void'
+        });
+
+        if (this.charCallback.ptr) {
+            glfw.glfwSetCharCallback(window, this.charCallback.ptr);
+        }
+    }
+
+    private charModsCallback?: JSCallback;
+
+    setCharModsCallback(window: Pointer, cb: (winPtr: number, codePoint: number, mods: number) => void) {
+        this.charModsCallback?.close();
+
+        this.charModsCallback = new JSCallback(cb, {
+            args: ['ptr', 'u32', 'int'],
+            returns: 'void'
+        });
+
+        if (this.charModsCallback.ptr) {
+            glfw.glfwSetCharModsCallback(window, this.charModsCallback.ptr);
+        }
     }
 }
+
+
+export const keymap = new Map<number, string>([
+    [ 32, 'Space'],
+    [ 39, 'Quote'],
+    [ 44, 'Comma'],
+    [ 45, 'Minus'],
+    [ 46, 'Period'],
+    [ 47, 'Slash'],
+    ...Array.from({ length: 10 }, (_, k) => [48 + k, `Digit${k}`] as const),
+    [ 59, 'Semicolon'],
+    [ 61, 'Equal'],
+    ...Array.from({ length: 26 }, (_, k) => [65 + k, `Key${String.fromCharCode(65 + k)}`] as const),
+    [ 91, 'BracketLeft'],
+    [ 92, 'Backslash'],
+    [ 93, 'BracketRight'],
+    [ 96, 'Backquote'],
+    [161, 'IntlBackslash'],
+    [256, 'Escape'],
+    [257, 'Enter'],
+    [258, 'Tab'],
+    [259, 'Backspace'],
+    [260, 'Insert'],
+    [261, 'Delete'],
+    [262, 'ArrowRight'],
+    [263, 'ArrowLeft'],
+    [264, 'ArrowDown'],
+    [265, 'ArrowUp'],
+    [266, 'PageUp'],
+    [267, 'PageDown'],
+    [268, 'Home'],
+    [267, 'End'],
+    [280, 'CapsLock'],
+    [281, 'ScrollLock'],
+    [282, 'NumLock'],
+    [283, 'PrintScreen'],
+    ...Array.from({ length: 25 }, (_, k) => [290 + k, `F${k + 1}`] as const),
+    ...Array.from({ length: 10 }, (_, k) => [320 + k, `Numpad${k}`] as const),
+    [330, 'NumpadDecimal'],
+    [331, 'NumpadDivide'],
+    [332, 'NumpadMultiply'],
+    [333, 'NumpadSubtract'],
+    [334, 'NumpadAdd'],
+    [335, 'NumpadEnter'],
+    [340, 'ShiftLeft'],
+    [341, 'ControlLeft'],
+    [342, 'AltLeft'],
+    [343, 'MetaLeft'],
+    [344, 'ShiftRight'],
+    [345, 'ControlRight'],
+    [346, 'AltRight'],
+    [347, 'MetaRight'],
+    [348, 'ContextMenu'],
+]);
+
+export const keycodes = new Map<number, number>([
+    [ 32, 32], //Space
+    [ 39, 222], //Quote
+    [ 44, 188], //Comma
+    [ 45, 189], //Minus
+    [ 46, 190], //Period
+    [ 47, 191], //Slash
+    ...Array.from({ length: 10 }, (_, k) => [48 + k, 48 + k] as const),
+    [ 59, 186], //Semicolon
+    [ 61, 187], //Equal
+    ...Array.from({ length: 26 }, (_, k) => [65 + k, 65 + k] as const),
+    [ 91, 219], //BracketLeft
+    [ 92, 220], //Backslash
+    [ 93, 221], //BracketRight
+    [ 96, 192], //Backquote
+    [161, 192], //IntlBackslash
+    [256, 27], //Escape
+    [257, 13], //Enter
+    [258, 20], //Tab
+    [259, 8], //Backspace
+    [260, 45], //Insert
+    [261, 46], //Delete
+    [262, 39], //ArrowRight
+    [263, 37], //ArrowLeft
+    [264, 40], //ArrowDown
+    [265, 38], //ArrowUp
+    [266, 33], //PageUp
+    [267, 34], //PageDown
+    [268, 36], //Home
+    [267, 35], //End
+    [280, 20], //CapsLock
+    [281, 145], //ScrollLock
+    [282, 144], //NumLock
+    [283, 44], //PrintScreen
+    ...Array.from({ length: 25 }, (_, k) => [290 + k, 112 + k] as const),
+    ...Array.from({ length: 10 }, (_, k) => [320 + k, 96 + k] as const),
+    [330, 110], //NumpadDecimal
+    [331, 111], //NumpadDivide
+    [332, 106], //NumpadMultiply
+    [333, 109], //NumpadSubtract
+    [334, 107], //NumpadAdd
+    [335, 13], //NumpadEnter
+    [340, 16], //ShiftLeft
+    [341, 17], //ControlLeft
+    [342, 18], //AltLeft
+    [343, 91], //MetaLeft
+    [344, 16], //ShiftRight
+    [345, 17], //ControlRight
+    [346, 18], //AltRight
+    [347, 93], //MetaRight
+    [348, 93], //ContextMenu
+]);

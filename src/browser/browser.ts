@@ -57,7 +57,7 @@ export function attachDOM(windowFrame: WindowFrame, fps: number) {
     globalThis.window.URL = URL;
 
 
-    new WindowEventEmitter(windowFrame, document);
+    new WindowEventEmitter(windowFrame, window, document);
 
 
     globalThis.localStorage = new Storage();
