@@ -1,7 +1,7 @@
 // @bun
 // src/gpu.ts
 import { createGPUInstance } from "bun-webgpu";
-import { toArrayBuffer } from "bun:ffi";
+import { FFIType, JSCallback, toArrayBuffer } from "bun:ffi";
 
 // src/external-source.ts
 var toExternalSource = Symbol("toExternalSource");
@@ -71,11 +71,11 @@ function wrapAdapter(adapter) {
   adapter.requestDevice = async function(desc) {
     const device = await requestDeviceFn(desc);
     if (device)
-      wrapQueue(device);
+      wrapDevice(device);
     return device;
   };
 }
-function wrapQueue(device) {
+function wrapDevice(device) {
   const queue = device.queue;
   const submitFn = queue.submit.bind(queue);
   function submit(commandBuffers) {
@@ -102,6 +102,14 @@ function wrapQueue(device) {
   }
   queue.submit = submit.bind(queue);
   queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
+  if (process.platform == "win32") {
+    let popErrorScopeCallback = function(status, errorType, messagePtr, messageSize, userdata1, userdata2) {
+      this.instanceTicker.unregister();
+    };
+    device._popErrorScopeCallback = new JSCallback(popErrorScopeCallback.bind(device), {
+      args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.u64, FFIType.pointer, FFIType.pointer]
+    });
+  }
 }
 function extendDevice(device, props) {
   return Object.assign(device, props);
@@ -147,7 +155,7 @@ function addGPUErrorHandler(adapter) {
   };
 }
 // src/glfw/adapter.ts
-import { JSCallback, ptr, toArrayBuffer as toArrayBuffer2 } from "bun:ffi";
+import { JSCallback as JSCallback2, ptr, toArrayBuffer as toArrayBuffer2 } from "bun:ffi";
 
 // src/platform.ts
 var {fileURLToPath } = globalThis.Bun;
@@ -178,7 +186,7 @@ function resolveLibPath(libPath) {
 }
 
 // src/glfw/ffi.ts
-import { dlopen, FFIType, suffix } from "bun:ffi";
+import { dlopen, FFIType as FFIType2, suffix } from "bun:ffi";
 var constants = {
   FALSE: 0,
   TRUE: 1,
@@ -231,34 +239,34 @@ var platform = getPlatformType();
 var platformDependent = {
   win32: {
     glfwGetWin32Window: {
-      returns: FFIType.pointer,
-      args: [FFIType.pointer]
+      returns: FFIType2.pointer,
+      args: [FFIType2.pointer]
     }
   },
   wayland: {
     glfwGetWaylandWindow: {
-      returns: FFIType.pointer,
-      args: [FFIType.pointer]
+      returns: FFIType2.pointer,
+      args: [FFIType2.pointer]
     },
     glfwGetWaylandDisplay: {
-      returns: FFIType.pointer,
+      returns: FFIType2.pointer,
       args: []
     }
   },
   x11: {
     glfwGetX11Window: {
-      returns: FFIType.u64,
-      args: [FFIType.pointer]
+      returns: FFIType2.u64,
+      args: [FFIType2.pointer]
     },
     glfwGetX11Display: {
-      returns: FFIType.pointer,
+      returns: FFIType2.pointer,
       args: []
     }
   },
   cocoa: {
     glfwGetCocoaWindow: {
-      returns: FFIType.pointer,
-      args: [FFIType.pointer]
+      returns: FFIType2.pointer,
+      args: [FFIType2.pointer]
     }
   }
 };
@@ -266,143 +274,143 @@ var libPath = platform == "win32" ? "./lib/glfw3.dll" : platform == "cocoa" ? ".
 var libFilePath = resolveLibPath(libPath);
 var { symbols: glfw } = dlopen(libFilePath, {
   glfwInit: {
-    returns: FFIType.i32,
+    returns: FFIType2.i32,
     args: []
   },
   glfwTerminate: {
-    returns: FFIType.void,
+    returns: FFIType2.void,
     args: []
   },
   glfwWindowHint: {
-    returns: FFIType.void,
-    args: [FFIType.i32, FFIType.i32]
+    returns: FFIType2.void,
+    args: [FFIType2.i32, FFIType2.i32]
   },
   glfwCreateWindow: {
-    returns: FFIType.pointer,
-    args: [FFIType.i32, FFIType.i32, FFIType.cstring, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.pointer,
+    args: [FFIType2.i32, FFIType2.i32, FFIType2.cstring, FFIType2.pointer, FFIType2.pointer]
   },
   glfwDestroyWindow: {
-    returns: FFIType.void,
-    args: [FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer]
   },
   glfwWindowShouldClose: {
-    returns: FFIType.i32,
-    args: [FFIType.pointer]
+    returns: FFIType2.i32,
+    args: [FFIType2.pointer]
   },
   glfwPollEvents: {
-    returns: FFIType.void,
+    returns: FFIType2.void,
     args: []
   },
   glfwGetWindowAttrib: {
-    returns: FFIType.i32,
-    args: [FFIType.pointer, FFIType.i32]
+    returns: FFIType2.i32,
+    args: [FFIType2.pointer, FFIType2.i32]
   },
   glfwSetWindowAttrib: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.i32, FFIType2.i32]
   },
   glfwSetWindowTitle: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.cstring]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.cstring]
   },
   glfwSetWindowIcon: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.i32, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.i32, FFIType2.pointer]
   },
   glfwGetWindowSize: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwSetWindowSize: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.i32, FFIType2.i32]
   },
   glfwGetWindowPos: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwSetWindowPos: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.i32, FFIType2.i32]
   },
   glfwMaximizeWindow: {
-    returns: FFIType.void,
-    args: [FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer]
   },
   glfwIconifyWindow: {
-    returns: FFIType.void,
-    args: [FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer]
   },
   glfwRestoreWindow: {
-    returns: FFIType.void,
-    args: [FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer]
   },
   glfwSetWindowSizeCallback: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.ptr]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.ptr]
   },
   glfwSetInputMode: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.i32, FFIType.i32]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.i32, FFIType2.i32]
   },
   glfwGetKey: {
-    returns: FFIType.i32,
-    args: [FFIType.pointer, FFIType.i32]
+    returns: FFIType2.i32,
+    args: [FFIType2.pointer, FFIType2.i32]
   },
   glfwSetKeyCallback: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.function]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.function]
   },
   glfwSetCharCallback: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.function]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.function]
   },
   glfwSetCharModsCallback: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.function]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.function]
   },
   glfwGetMouseButton: {
-    returns: FFIType.i32,
-    args: [FFIType.pointer, FFIType.i32]
+    returns: FFIType2.i32,
+    args: [FFIType2.pointer, FFIType2.i32]
   },
   glfwGetCursorPos: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwSetCursorPos: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.double, FFIType.double]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.double, FFIType2.double]
   },
   glfwSetScrollCallback: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.function]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.function]
   },
   glfwGetPrimaryMonitor: {
-    returns: FFIType.pointer
+    returns: FFIType2.pointer
   },
   glfwGetMonitors: {
-    returns: FFIType.pointer,
-    args: [FFIType.pointer]
+    returns: FFIType2.pointer,
+    args: [FFIType2.pointer]
   },
   glfwGetWindowMonitor: {
-    returns: FFIType.pointer,
-    args: [FFIType.pointer]
+    returns: FFIType2.pointer,
+    args: [FFIType2.pointer]
   },
   glfwGetMonitorPos: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwGetMonitorWorkarea: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwGetMonitorContentScale: {
-    returns: FFIType.void,
-    args: [FFIType.pointer, FFIType.pointer, FFIType.pointer]
+    returns: FFIType2.void,
+    args: [FFIType2.pointer, FFIType2.pointer, FFIType2.pointer]
   },
   glfwGetVideoMode: {
-    returns: FFIType.pointer,
-    args: [FFIType.pointer]
+    returns: FFIType2.pointer,
+    args: [FFIType2.pointer]
   },
   ...platformDependent[platform]
 });
@@ -524,7 +532,7 @@ class GLFWAdapter {
     if (cb == null) {
       ffi_default.glfwSetWindowSizeCallback(window, null);
     } else {
-      this.windowSizeCallback = new JSCallback(cb, {
+      this.windowSizeCallback = new JSCallback2(cb, {
         args: ["ptr", "int", "int"],
         returns: "void"
       });
@@ -546,7 +554,7 @@ class GLFWAdapter {
   scrollCallback;
   setScrollCallback(window, cb) {
     this.scrollCallback?.close();
-    this.scrollCallback = new JSCallback(cb, {
+    this.scrollCallback = new JSCallback2(cb, {
       args: ["ptr", "double", "double"],
       returns: "void"
     });
@@ -560,7 +568,7 @@ class GLFWAdapter {
   keyCallback;
   setKeyCallback(window, cb) {
     this.keyCallback?.close();
-    this.keyCallback = new JSCallback(cb, {
+    this.keyCallback = new JSCallback2(cb, {
       args: ["ptr", "int", "int", "int", "int"],
       returns: "void"
     });
@@ -571,7 +579,7 @@ class GLFWAdapter {
   charCallback;
   setCharCallback(window, cb) {
     this.charCallback?.close();
-    this.charCallback = new JSCallback(cb, {
+    this.charCallback = new JSCallback2(cb, {
       args: ["ptr", "u32"],
       returns: "void"
     });
@@ -582,7 +590,7 @@ class GLFWAdapter {
   charModsCallback;
   setCharModsCallback(window, cb) {
     this.charModsCallback?.close();
-    this.charModsCallback = new JSCallback(cb, {
+    this.charModsCallback = new JSCallback2(cb, {
       args: ["ptr", "u32", "int"],
       returns: "void"
     });

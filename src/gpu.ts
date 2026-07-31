@@ -1,5 +1,5 @@
 import { createGPUInstance } from 'bun-webgpu';
-import { toArrayBuffer, type Pointer } from 'bun:ffi';
+import { FFIType, JSCallback, toArrayBuffer, type Pointer } from 'bun:ffi';
 import { toExternalSource, type GPUExternalDataSource } from './external-source.js';
 
 
@@ -104,13 +104,13 @@ function wrapAdapter(adapter: GPUAdapter) {
     adapter.requestDevice = async function(desc) {
         const device = await requestDeviceFn(desc);
 
-        if (device) wrapQueue(device);
+        if (device) wrapDevice(device);
         return device;
     };
 }
 
 
-function wrapQueue(device: GPUDevice) {
+function wrapDevice(device: GPUDevice) {
     const queue = device.queue;
     const submitFn = queue.submit.bind(queue);
 
@@ -151,6 +151,26 @@ function wrapQueue(device: GPUDevice) {
 
     queue.submit = submit.bind(queue);
     queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
+
+
+    // dirty fix for Windows: crash when userdata1 is null
+    if (process.platform == 'win32') {
+        function popErrorScopeCallback(
+            this: any,
+            status: number,
+            errorType: number,
+            messagePtr: Pointer | null,
+            messageSize: bigint,
+            userdata1: Pointer,
+            userdata2: Pointer | null
+        ) {
+            this.instanceTicker.unregister();
+        };
+
+        (device as any)._popErrorScopeCallback = new JSCallback(popErrorScopeCallback.bind(device), {
+            args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.u64, FFIType.pointer, FFIType.pointer]
+        });
+    }
 }
 
 

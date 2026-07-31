@@ -2,7 +2,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import * as THREE from 'three/webgpu';
-import { attachDOM, gpu, WindowFrame } from '../src/index.js';
+import { addGPUErrorHandler, attachDOM, gpu, WindowFrame } from '../src/index.js';
 import { Window } from '../types/browser/dom/window.js';
 
 
@@ -11,6 +11,8 @@ const device = await adapter?.requestDevice();
 if (!device) {
     throw new Error('No GPU adapter/device found');
 }
+
+addGPUErrorHandler(adapter!);
 
 
 const win = new WindowFrame(1280, 720, 'SoGPU - Three.js glTF & HDRI Example');
@@ -49,7 +51,7 @@ init().catch(function (err) {
 });
 
 async function init() {
-    renderer = new THREE.WebGPURenderer({ device, context, antialias: true });
+    renderer = new THREE.WebGPURenderer({ device, context, antialias: true, alpha: false });
     renderer.setAnimationLoop(render);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);

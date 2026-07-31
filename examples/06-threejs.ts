@@ -27,9 +27,8 @@ setInterval(() => {
 const renderer = new THREE.WebGPURenderer({
     device,
     context: ctx,
-    // canvas: ctx.canvas as any as HTMLCanvasElement,
     antialias: true,
-    samples: 4
+    alpha: false
 });
 
 const camera = new THREE.PerspectiveCamera(90, 1280/720, 0.1, 100);
