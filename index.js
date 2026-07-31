@@ -103,11 +103,46 @@ function wrapDevice(device) {
   queue.submit = submit.bind(queue);
   queue.copyExternalImageToTexture = copyExternalImageToTexture.bind(queue);
   if (process.platform == "win32") {
-    let popErrorScopeCallback = function(status, errorType, messagePtr, messageSize, userdata1, userdata2) {
+    let popErrorScopeCallback = function(status, errorType, messagePtr, userdata1, userdata2) {
       this.instanceTicker.unregister();
+      const userDataBuffer = toArrayBuffer(userdata1, 0, 8);
+      const userDataView = new Uint32Array(userDataBuffer);
+      const popId = userDataView[0];
+      const promiseData = this._popErrorScopePromises.get(popId);
+      this._popErrorScopePromises.delete(popId);
+      if (promiseData) {
+        if (status == 1) {
+          promiseData.resolve(null);
+        } else if (status == 2) {
+          const message = decodeWin32Message(messagePtr);
+          promiseData.reject(new Error(message));
+        } else {
+          const message = decodeWin32Message(messagePtr);
+          const typeText = errorTypes[errorType];
+          const error = new Error(`[WebGPU error] [${typeText}] ${message}`);
+          promiseData.resolve(error);
+        }
+      } else {
+        console.error("[POP ERROR SCOPE CALLBACK] promise not found for ID:", popId, "Map size:", this._popErrorScopePromises.size);
+      }
+      function decodeWin32Message(messagePtr2) {
+        if (messagePtr2 == null) {
+          return "";
+        }
+        let message = "";
+        const stringView = toArrayBuffer(messagePtr2, 0, 16);
+        const dv = new DataView(stringView);
+        const dataPtr = dv.getBigUint64(0, true);
+        const length = Number(dv.getBigUint64(8, true));
+        if (dataPtr !== 0n && length > 0) {
+          const strBuf = toArrayBuffer(Number(dataPtr), 0, length);
+          message = new TextDecoder().decode(strBuf);
+        }
+        return message;
+      }
     };
     device._popErrorScopeCallback = new JSCallback(popErrorScopeCallback.bind(device), {
-      args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.u64, FFIType.pointer, FFIType.pointer]
+      args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.pointer, FFIType.pointer]
     });
   }
 }

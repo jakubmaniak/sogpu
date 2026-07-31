@@ -160,15 +160,66 @@ function wrapDevice(device: GPUDevice) {
             status: number,
             errorType: number,
             messagePtr: Pointer | null,
-            messageSize: bigint,
             userdata1: Pointer,
             userdata2: Pointer | null
         ) {
             this.instanceTicker.unregister();
+
+            const userDataBuffer = toArrayBuffer(userdata1, 0, 8);
+            const userDataView = new Uint32Array(userDataBuffer);
+            const popId = userDataView[0];
+            // const index = userDataView[1];
+            // idBufferPool.releaseBlock(index);
+
+            const promiseData = this._popErrorScopePromises.get(popId);
+            this._popErrorScopePromises.delete(popId);
+            if (promiseData) {
+                if (status == 1) {
+                    promiseData.resolve(null);
+                }
+                else if (status == 2) {
+                    const message = decodeWin32Message(messagePtr);
+                    promiseData.reject(new Error(message));
+                }
+                else {
+                    const message = decodeWin32Message(messagePtr);
+                    const typeText = errorTypes[errorType as keyof typeof errorTypes];
+                    const error = new Error(`[WebGPU error] [${typeText}] ${message}`)
+
+                    promiseData.resolve(error);
+                }
+            }
+            else {
+                console.error(
+                    '[POP ERROR SCOPE CALLBACK] promise not found for ID:', popId,
+                    'Map size:', this._popErrorScopePromises.size
+                );
+            }
+
+
+            function decodeWin32Message(messagePtr: Pointer | null) {
+                if (messagePtr == null) {
+                    return '';
+                }
+
+                let message = '';
+
+                const stringView = toArrayBuffer(messagePtr, 0, 16);
+                const dv = new DataView(stringView);
+                const dataPtr = dv.getBigUint64(0, true);
+                const length = Number(dv.getBigUint64(8, true));
+
+                if (dataPtr !== 0n && length > 0) {
+                    const strBuf = toArrayBuffer(Number(dataPtr) as Pointer, 0, length);
+                    message = new TextDecoder().decode(strBuf);
+                }
+
+                return message;
+            }
         };
 
         (device as any)._popErrorScopeCallback = new JSCallback(popErrorScopeCallback.bind(device), {
-            args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.u64, FFIType.pointer, FFIType.pointer]
+            args: [FFIType.u32, FFIType.u32, FFIType.pointer, FFIType.pointer, FFIType.pointer]
         });
     }
 }
